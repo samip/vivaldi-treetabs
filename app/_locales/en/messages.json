@@ -1,0 +1,18 @@
+{
+  "appName": {
+    "message": "vivaldi tabs",
+    "description": "The name of the application"
+  },
+  "appShortName": {
+    "message": "vivaldi tab",
+    "description": "The short_name (maximum of 12 characters recommended) is a short version of the app's name."
+  },
+  "appDescription": {
+    "message": "Vivaldi tab extension",
+    "description": "The description of the application"
+  },
+  "browserActionTitle": {
+    "message": "vivaldi tabs",
+    "description": "The title of the browser action button"
+  }
+}
