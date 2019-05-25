@@ -7,23 +7,23 @@ export default class Node {
   parent: Node;
 
   constructor(tab: Tab) {
+    console.log(tab.id);
     this.id = tab.id;
     this.children = new NodeList();
   }
 
   traverseUp() {
     let helper = function(i:any, c:any): any {
-      console.log(i, i.parent);
       if (i.parent) {
         return helper(i.parent, ++c);
       } else {
-        console.log('end', c);
         return c;
       }
     };
 
     return helper(this, 0);
   }
+
 
   depth(): number {
     return this.traverseUp();
@@ -45,11 +45,29 @@ export default class Node {
   }
 
   remove() {
-    // Remove from old parent's children
     if (this.parent) {
+      // remove from parent's children
       this.parent.children.remove(this);
     }
-    // update children
+    // reparent own children to own parent and redraw
+    /*
+    this.children.values.forEach( (childNode: Node) => {
+        childNode.parentTo(this.parent);
+        childNode.update();
+    });
+    */
+    this.children.values.forEach( (childNode: Node) => {
+        childNode.parentTo(this.parent);
+    });
+
+    this.parent.children.applyRecursive((child: Node) => {
+        child.update();
+    });
+
+  }
+
+  update() {
+    chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli', {command: 'IndentTab', tabId: this.id, indentLevel: this.depth()});
   }
 
 }

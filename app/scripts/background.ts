@@ -41,6 +41,18 @@ chrome.tabs.onCreated.addListener((tab: Tab) => {
   //console.log('Created tab', tab);
 
 
-  chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli', {command: 'IndentTab', tabId: tab.id, indentLevel: 0});
+chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli', {command: 'IndentTab', tabId: tab.id, indentLevel: node.depth()});
+chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli', {command: 'ShowId', tabId: tab.id});
 });
 
+
+chrome.tabs.onRemoved.addListener(function (tabId) {
+    let node = nodelist.get(tabId);
+
+    if (!node) {
+        // should never happen
+        console.log('Tab [' + tabId + '] not in container');
+        return;
+    }
+    node.remove();
+});
