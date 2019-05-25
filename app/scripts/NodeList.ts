@@ -1,7 +1,5 @@
 import Node from './Node';
 
-
-
 export class NodeList {
 
   nodes: { [s: string]: Node; } = <any>{};
@@ -11,19 +9,18 @@ export class NodeList {
   }
 
   add(node: Node) {
-    console.log(node);
-    this.nodes[''+node.id] = node;
+    this.nodes['' + node.id] = node;
   }
 
   remove(node: Node) {
-    delete this.nodes[''+node.id];
+    delete this.nodes['' + node.id];
   }
 
   get(id: Number): Node {
-    return this.nodes[''+id];
+    return this.nodes['' + id];
   }
 
-  init() {
+  init() {
 
   }
 

@@ -19,13 +19,11 @@ chrome.runtime.onInstalled.addListener((details) => {
 chrome.runtime.onMessageExternal.addListener(
   (request, sender, sendResponse) => {
     console.log('external received in background', request, sender);
-  });
+  }
+);
 
 
-
-
-chrome.tabs.onCreated.addListener(function (tab: Tab) {
-  console.log('moro');
+chrome.tabs.onCreated.addListener((tab: Tab) => {
   let node = new Node(tab);
   nodelist.add(node);
 
@@ -39,8 +37,8 @@ chrome.tabs.onCreated.addListener(function (tab: Tab) {
   }
 
 
-  console.log(node.depth());
-  console.log('Created tab', tab);
+  //console.log(node.depth());
+  //console.log('Created tab', tab);
 
 
   chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli', {command: 'IndentTab', tabId: tab.id, indentLevel: 0});

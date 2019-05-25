@@ -24,7 +24,7 @@ class TabControl {
       console.log(indentLevel + '*' + this.indentStep + '+' + this.indentUnit + '=' + indentVal + '  pass:' + pass)
       element.style[this.indentAttribute] = indentVal
     } else {
-      // keep looking, todo: timeout
+      // keep looking, fixme
       setTimeout(() => {
         this.IndentTab(tabId, indentLevel, pass++)
       }, 50)
@@ -59,7 +59,7 @@ chrome.runtime.onMessageExternal.addListener(
 
     switch (request.command) {
       case 'IndentTab':
-        if (typeof request.tabId === undefined || typeof request.indentLevel === undefined) {
+        if (typeof request.tabId === 'undefined' || typeof request.indentLevel === 'undefined') {
           console.log('Undefined tabId or indentLevel')
         } else {
           tabcontrol.IndentTab(request.tabId, request.indentLevel)
