@@ -1,14 +1,20 @@
 import Tab = chrome.tabs.Tab;
 import {NodeList} from './NodeList';
 
-export default class Node {
-  id: Number|undefined;
+interface IRawParams {
+    [id: string]: any;
+}
+
+export default class Node implements IRawParams {
+  [k: string]: any;
+  id: number|undefined;
   children: NodeList;
-  parent: Node;
+  tab: Tab;
+  parent?: Node;
 
   constructor(tab: Tab) {
-    console.log(tab.id);
     this.id = tab.id;
+    this.tab = tab;
     this.children = new NodeList();
   }
 
@@ -29,7 +35,7 @@ export default class Node {
     return this.traverseUp();
   }
 
-  parentTo(parent: Node) {
+  parentTo(parent?: Node) {
     // Remove from old parent's children
     if (this.parent) {
       this.parent.children.remove(this);
@@ -41,7 +47,11 @@ export default class Node {
     // allow setting null (root tab)
     this.parent = parent;
 
-    // update children
+    if (this.parent) {
+      this.parent.children.applyRecursive((child: Node) => {
+        child.update();
+      });
+    }
   }
 
   remove() {
@@ -60,9 +70,11 @@ export default class Node {
         childNode.parentTo(this.parent);
     });
 
-    this.parent.children.applyRecursive((child: Node) => {
+    if (this.parent) {
+      this.parent.children.applyRecursive((child: Node) => {
         child.update();
-    });
+      });
+    }
 
   }
 

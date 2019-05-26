@@ -1,4 +1,10 @@
-/// <reference path="Node.ts">
+/*
+    todo:
+    tallenna tabien tilat ja mappaa ne käynnistyksen yhteydessä aukeaviin tabeihin
+    Estä tabia aukeammasta keskelle treetä
+    Tabin siirron käsittely
+
+*/
 
 // Enable chromereload by uncommenting this line:
 import 'chromereload/devonly';
@@ -7,9 +13,13 @@ import Node from './Node';
 import {nodelist} from './NodeList';
 
 
-var browserExtensionId = 'mpognobbkildjkofajifpdfhcoklimli';
+const options = {
+  // Tab hierarchy is saved into local storage and restored if possible
+  persistOverSession: true
+};
 
-nodelist.init();
+let browserExtensionId = 'mpognobbkildjkofajifpdfhcoklimli';
+
 
 chrome.runtime.onInstalled.addListener((details) => {
   console.log('previousVersion', details.previousVersion);
@@ -35,15 +45,16 @@ chrome.tabs.onCreated.addListener((tab: Tab) => {
       node.parentTo(parentTab);
     }
   }
-
-
-  //console.log(node.depth());
-  //console.log('Created tab', tab);
-
-
-chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli', {command: 'IndentTab', tabId: tab.id, indentLevel: node.depth()});
-chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli', {command: 'ShowId', tabId: tab.id});
+  chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli', {command: 'IndentTab', tabId: tab.id, indentLevel: node.depth()});
+  chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli', {command: 'ShowId', tabId: tab.id});
+  console.log(nodelist.values);
+  // nodelist.store();
 });
+
+chrome.windows.onRemoved.addListener(function (windowId) {
+    nodelist.store(windowId);
+});
+
 
 
 chrome.tabs.onRemoved.addListener(function (tabId) {
@@ -56,3 +67,10 @@ chrome.tabs.onRemoved.addListener(function (tabId) {
     }
     node.remove();
 });
+
+function main() {
+  nodelist.build();
+  nodelist.restoreHierarchy();
+}
+
+main();
