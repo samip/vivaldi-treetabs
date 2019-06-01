@@ -11,11 +11,13 @@ export default class Node implements IRawParams {
   children: NodeList;
   tab: Tab;
   parent?: Node;
+  waitingForRepositioning: boolean;
 
   constructor(tab: Tab) {
     this.id = tab.id;
     this.tab = tab;
     this.children = new NodeList();
+    this.waitingForRepositioning = false;
   }
 
   traverseUp() {
@@ -30,6 +32,14 @@ export default class Node implements IRawParams {
     return helper(this, 0);
   }
 
+  isRoot(): boolean {
+    if (this.tab) {
+      return !this.tab.openerTabId;
+    } else {
+      return false;
+    }
+    // return !this.parent;
+  }
 
   depth(): number {
     return this.traverseUp();

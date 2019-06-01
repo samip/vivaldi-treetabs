@@ -5,8 +5,11 @@ export type NodeCallback = (node: Node) => any;
 export class NodeList {
 
   nodes: { [s: string]: Node; } = <any>{};
+
   values: Node[] = [];
   keys: string[] = [];
+
+
   constructor() {
 
   }
@@ -90,6 +93,13 @@ export class NodeList {
         }
       });
   }
+
+  getSorted() {
+    return this.values.sort((a: Node, b: Node): number => {
+      return a.tab.index - b.tab.index;
+    });
+  }
+
 
   store(windowId?:number) {
     // todo: 1 nodelist per window?
