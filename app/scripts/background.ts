@@ -101,9 +101,7 @@ chrome.tabs.onMoved.addListener((tabId, moveInfo) => {
         // Found correct index, move to it and exit
         chrome.tabs.move([tabId], {index: i});
         wasMoved = true;
-        return i; // exit
       }
-      return null;
     });
   }
   // moveToCorrectPosition(node, moveInfo);
