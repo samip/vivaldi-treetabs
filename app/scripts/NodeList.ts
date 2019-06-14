@@ -21,6 +21,7 @@ export class NodeList {
     this.values.push(node);
   }
 
+
   applyRecursive(callback: NodeCallback) {
     this.values.forEach( (childNode: Node) => {
         callback(childNode);
@@ -94,6 +95,9 @@ export class NodeList {
       });
   }
 
+  /*
+  Nodes sorted by index
+   */
   getSorted() {
     return this.values.sort((a: Node, b: Node): number => {
       return a.tab.index - b.tab.index;

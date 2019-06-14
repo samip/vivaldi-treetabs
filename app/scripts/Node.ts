@@ -7,14 +7,18 @@ interface IRawParams {
 
 export default class Node implements IRawParams {
   [k: string]: any;
-  id: number|undefined;
+  id: number;
   children: NodeList;
   tab: Tab;
   parent?: Node;
   waitingForRepositioning: boolean;
 
   constructor(tab: Tab) {
-    this.id = tab.id;
+    if (tab.id) {
+      this.id = tab.id;
+    } else {
+      throw new Error('No tab id');
+    }
     this.tab = tab;
     this.children = new NodeList();
     this.waitingForRepositioning = false;
@@ -39,6 +43,23 @@ export default class Node implements IRawParams {
       return false;
     }
     // return !this.parent;
+  }
+
+  isSibling(compare: Node): boolean {
+    if (this.parent) {
+      let sameParent = this.parent.children.get(compare.id) !== null;
+      console.log(sameParent);
+      return sameParent;
+    }
+    // both roots -> siblings
+    return false;
+  }
+
+  siblings(): NodeList {
+    if (this.parent) {
+      return this.parent.children;
+    }
+    return new NodeList();
   }
 
   depth(): number {
@@ -78,6 +99,7 @@ export default class Node implements IRawParams {
     */
     this.children.values.forEach( (childNode: Node) => {
         childNode.parentTo(this.parent);
+        childNode.update();
     });
 
     if (this.parent) {

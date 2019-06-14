@@ -33,62 +33,80 @@ chrome.runtime.onMessageExternal.addListener(
   }
 );
 
+enum newTabPosition { first_child, last_child };
+
 
 chrome.tabs.onCreated.addListener((tab: Tab) => {
   let node = new Node(tab);
   nodelist.add(node);
-
+  console.log(tab);
+  // child tab created
   if (tab.openerTabId) {
     let parentTab = nodelist.get(tab.openerTabId);
-    if (!parentTab) {
-      console.error('Missing parent ' + tab.openerTabId);
+    let parentIndex = parentTab.tab.index + 1;
+    // chrome.tabs.move([node.id], {index: parentIndex});
+    node.parentTo(parentTab);
+    console.log('node', node, 'depth', node.depth());
+    console.log('parented to ', parentTab);
+    node.waitingForRepositioning = true;
+    chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli', {command: 'IndentTab', tabId: tab.id, indentLevel: node.depth()});
+  } else {
+    console.log('New root created');
+    // chrome.tabs.move([node.id], {index: 0});
+    moveToCorrectPosition(node, {fromIndex: node.tab.index});
+  }
+});
+
+function moveToCorrectPosition(node:Node, moveInfo:any) {
+  let firstChild = true;
+  // let insideTree = !nodelist.get(moveInfo.toIndex).isRoot();
+  let actualMove = () => {
+    let sorted = nodelist.getSorted();
+    let toNode = sorted[moveInfo.toIndex];
+    if (toNode) {
+      node.parentTo(toNode);
+      console.log('Moved', node, 'under', toNode);
+    }
+  };
+
+
+  if (node.isRoot()) {
+    let host = nodelist.getSorted()[moveInfo.toIndex];
+    if (firstChild) {
     } else {
-      node.parentTo(parentTab);
+      let lastSibling;
     }
   } else {
-    node.waitingForRepositioning = true; // set root up for repositioning to prevent broken leafs
+    let sortedSiblings = node.siblings().values.sort((a: Node, b: Node): number => {
+      return a.tab.index - b.tab.index;
+    });
+    let firstSibling = sortedSiblings[0];
+    let lastSibling = sortedSiblings[sortedSiblings.length];
   }
-  chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli', {command: 'IndentTab', tabId: tab.id, indentLevel: node.depth()});
-  chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli', {command: 'ShowId', tabId: tab.id});
-  console.log(tab.index);
-  // nodelist.store();
-});
+
+}
 
 chrome.tabs.onMoved.addListener((tabId, moveInfo) => {
   console.log(tabId, moveInfo);
-  // nodelist.get(tabId).onMoved(moveInfo);
-
+  let node:Node = nodelist.get(tabId);
   let sorted = nodelist.getSorted();
-
-  let self = nodelist.get(tabId);
-
-  if (!self.waitingForRepositioning) {
-    console.log('Skipping double for', tabId);
-    return;
-  }
-
-
-  let selfIndex = moveInfo.toIndex;
-  let takeFirstPossible = true;
-  let found: Boolean = false;
-
-  // Reposition new tab outside any group of children
-  if (self.isRoot()) {
-    for (let i = selfIndex + 0; i <= sorted.length; i++) {
-      let item = sorted[i];
-      if (!item || (item.isRoot())) {
-        if (!found) {
-          if (takeFirstPossible) {
-            console.log('Moving ', self , ' PIVOT ', item);
-            chrome.tabs.move([tabId], {index: i});
-             chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli', {command: 'ShowId', tabId: tabId});
-            found = true;
-            self.waitingForRepositioning = false;
-          }
-        }
+  if (node.isRoot()) {
+    /*
+    Move root node to correct index
+    Correct index is before the first root parent after initial index
+     */
+    let wasMoved = false;
+    let moveIndex = sorted.forEach((node: Node, i: number) => {
+      if (!wasMoved && i >= moveInfo.toIndex && node.isRoot()) {
+        // Found correct index, move to it and exit
+        chrome.tabs.move([tabId], {index: i});
+        wasMoved = true;
+        return i; // exit
       }
-    }
+      return null;
+    });
   }
+  // moveToCorrectPosition(node, moveInfo);
 });
 
 
