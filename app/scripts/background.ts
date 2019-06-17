@@ -48,12 +48,13 @@ chrome.tabs.onCreated.addListener((tab: Tab) => {
     node.parentTo(parentTab);
     console.log('node', node, 'depth', node.depth());
     console.log('parented to ', parentTab);
-    node.waitingForRepositioning = true;
+    // node.waitingForRepositioning = true;
     chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli', {command: 'IndentTab', tabId: tab.id, indentLevel: node.depth()});
   } else {
-    console.log('New root created');
+    console.log('New root created at initial index', tab.index);
     // chrome.tabs.move([node.id], {index: 0});
-    moveToCorrectPosition(node, {fromIndex: node.tab.index});
+    //moveToCorrectPosition(node, {fromIndex: node.tab.index});
+    node.waitingForRepositioning = true;
   }
 });
 
@@ -87,21 +88,29 @@ function moveToCorrectPosition(node:Node, moveInfo:any) {
 }
 
 chrome.tabs.onMoved.addListener((tabId, moveInfo) => {
-  console.log(tabId, moveInfo);
   let node:Node = nodelist.get(tabId);
   let sorted = nodelist.getSorted();
-  if (node.isRoot()) {
+
+  if (node.isRoot() && node.waitingForRepositioning) {
     /*
     Move root node to correct index
     Correct index is before the first root parent after initial index
      */
     let wasMoved = false;
-    let moveIndex = sorted.forEach((node: Node, i: number) => {
-      if (!wasMoved && i >= moveInfo.toIndex && node.isRoot()) {
+    let previous:Node;
+
+    let moveIndex = sorted.forEach((compare: Node, i: number) => {
+      if (!wasMoved && i >= moveInfo.toIndex && compare.isRoot()) {
         // Found correct index, move to it and exit
+        console.log(compare, 'is good neighbour at', i, compare.tab.index);
+        console.log(compare.depth(), previous.depth());
+        console.log(previous);
         chrome.tabs.move([tabId], {index: i});
         wasMoved = true;
+      } else {
+        console.log(compare, 'is bad neighbour at ', i, compare.tab.index);
       }
+      previous = compare;
     });
   }
   // moveToCorrectPosition(node, moveInfo);
