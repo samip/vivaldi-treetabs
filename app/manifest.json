@@ -27,10 +27,20 @@
     "page": "pages/options.html",
     "chrome_style": true
   },
+  "commands": {
+    "close-child-tabs": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+Y",
+        "mac": "Command+Shift+Y"
+      },
+      "description": "Close current tab's children"
+    }
+  },
   "permissions": [
     "contextMenus",
     "tabs",
     "storage",
-    "<all_urls>"
+    "<all_urls>",
+    "management"
   ]
 }

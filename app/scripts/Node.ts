@@ -8,6 +8,7 @@ interface IRawParams {
 export default class Node implements IRawParams {
   [k: string]: any;
   id: number;
+  title: string|undefined;
   children: NodeList;
   tab: Tab;
   parent?: Node;
@@ -20,6 +21,7 @@ export default class Node implements IRawParams {
       throw new Error('No tab id');
     }
     this.tab = tab;
+    this.title = tab.title;
     this.children = new NodeList();
     this.waitingForRepositioning = false;
   }

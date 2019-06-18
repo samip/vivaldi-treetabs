@@ -33,8 +33,23 @@ chrome.runtime.onMessageExternal.addListener(
   }
 );
 
-enum newTabPosition { first_child, last_child };
-
+chrome.commands.onCommand.addListener(function(command) {
+  let log = (message:string) => {
+   let enabled = true;
+   if (enabled) {
+     console.log(message);
+   }
+  };
+  log('Received command:' + command);
+  switch (command) {
+    case 'close-child-tabs':
+      log('Close child tabs');
+      break;
+    default:
+      console.error('Unknown command');
+      break;
+  }
+});
 
 chrome.tabs.onCreated.addListener((tab: Tab) => {
   let node = new Node(tab);
@@ -57,6 +72,8 @@ chrome.tabs.onCreated.addListener((tab: Tab) => {
     node.waitingForRepositioning = true;
   }
 });
+
+
 
 function moveToCorrectPosition(node:Node, moveInfo:any) {
   let firstChild = true;
@@ -90,7 +107,8 @@ function moveToCorrectPosition(node:Node, moveInfo:any) {
 chrome.tabs.onMoved.addListener((tabId, moveInfo) => {
   let node:Node = nodelist.get(tabId);
   let sorted = nodelist.getSorted();
-
+  console.log(sorted, nodelist);
+  console.log(sorted.length, nodelist.values.length);
   if (node.isRoot() && node.waitingForRepositioning) {
     /*
     Move root node to correct index
@@ -100,15 +118,21 @@ chrome.tabs.onMoved.addListener((tabId, moveInfo) => {
     let previous:Node;
 
     let moveIndex = sorted.forEach((compare: Node, i: number) => {
-      if (!wasMoved && i >= moveInfo.toIndex && compare.isRoot()) {
+      // console.log(compare.tab.title, i);
+      // ei toimi vikalla tabilla
+      let isLast = i === sorted.length - 1;
+      if (!wasMoved && isLast ||  (i >= moveInfo.toIndex && compare.isRoot() && compare.id !== node.id)) {
         // Found correct index, move to it and exit
-        console.log(compare, 'is good neighbour at', i, compare.tab.index);
-        console.log(compare.depth(), previous.depth());
-        console.log(previous);
+        if (compare.id === node.id) {
+          console.error('compared to self');
+        }
+        console.log(compare.tab.title, 'is good neighbour at at index', i, compare.tab.index, 'depth:', compare.depth(), compare);
+        console.log(previous.tab.title, 'is another neighbour at index', previous.tab.index, 'depth:', previous.depth(), previous);
+        console.log(node.tab.title, ' is moved to ', i, node);
         chrome.tabs.move([tabId], {index: i});
         wasMoved = true;
       } else {
-        console.log(compare, 'is bad neighbour at ', i, compare.tab.index);
+        // console.log(compare, 'is bad neighbour at ', i, compare.tab.index);
       }
       previous = compare;
     });
@@ -127,10 +151,12 @@ chrome.tabs.onRemoved.addListener(function (tabId) {
 
     if (!node) {
         // should never happen
-        console.log('Tab [' + tabId + '] not in container');
+        console.error('Tab [' + tabId + '] not in container');
         return;
     }
+    nodelist.remove(node);
     node.remove();
+    console.log(node, nodelist.get(tabId));
 });
 
 function main() {
