@@ -3,16 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <title>Title</title>
+    <style>
+      body, html {
+        margin: 0;
+        padding: 0;
+      }
+
+    div.index-number {
+      font-family: Ubuntu, system-ui, sans-serif;
+      font-size: 13px;
+      line-height: 28px;
+      font-weight: 400;
+      height:30px;
+      margin:0 0px;
+      padding:0 5px;
+      background-color: blueviolet;
+    }
+      div.index-number:nth-child(even) {
+   background-color: violet;
+      }
+
+    </style>
+
+
 </head>
 <body>
 
-<div>
-
-  <a class="test-link" href="testpage.html?a=0">Test</a>
-  <a class="test-link" href="testpage.html?a=1">Test</a>
-  <a class="test-link" href="testpage.html?a=2">Test</a>
+<div id="index-list" style="float:left">
 
 </div>
 
+<div style="float:right; margin-right: 80%">
+  <ol>
+    <li><a title="0" class="test-link" href="testpage.html?a=first">First</a>
+    <li><a class="test-link" href="testpage.html?a=second">Second</a>
+    <li><a class="test-link" href="testpage.html?a=third">Third</a>
+  </ol>
+  <a href="vivaldi://extensions/">Extensions</a>
+</div>
+
+
+
+
+
 </body>
+
+  <script>
+  function getUrlVars() {
+    var vars = {};
+    var parts = window.location.href.replace(/[?&]+([^=&]+)=([^&]*)/gi, function(m,key,value) {
+        vars[key] = value;
+    });
+    return vars;
+  }
+
+  function renderIndexNumbers() {
+    const target = document.getElementById('index-list');
+
+    for (let i = 0; i <= 40; i++) {
+      let div = document.createElement("div");//create a new div
+      div.innerText = i;
+      div.classList.add('index-number')
+      target.appendChild(div);
+    }
+  }
+
+  renderIndexNumbers();
+  document.title = getUrlVars()['a'];
+
+  </script>
 </html>
