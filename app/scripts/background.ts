@@ -68,24 +68,28 @@ chrome.tabs.onCreated.addListener((tab: Tab) => {
     let parentIndex = parentTab.tab.index + 1;
     // chrome.tabs.move([node.id], {index: parentIndex});
     node.parentTo(parentTab);
-    log('node', node, 'depth', node.depth());
-    log('parented to ', parentTab);
+    // log('node', node, 'depth', node.depth());
+    // log('parented to ', parentTab);
     // node.waitingForRepositioning = true;
     chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli', {command: 'IndentTab', tabId: tab.id, indentLevel: node.depth()});
   } else {
-    log('New root created at initial index', tab.index);
+    log('New root created at initial index', tab.index, 'id:', tab.id);
     // chrome.tabs.move([node.id], {index: 0});
     // moveToCorrectPosition(node, {fromIndex: node.tab.index});
     node.waitingForRepositioning = true;
+    node.firstPassGone = false;
   }
 });
 
 
+function rLog(msg:any) {
+  console.log('%c  ' + msg, 'background: #222; color: #bada55');
+}
 
 chrome.tabs.onMoved.addListener((tabId, moveInfo) => {
 
   let log = (...obj:any) => {
-    let enable = false;
+    let enable = true;
     if (enable) {
       console.log(...obj);
     }
@@ -94,8 +98,16 @@ chrome.tabs.onMoved.addListener((tabId, moveInfo) => {
   let node:Node = nodelist.get(tabId);
   let sorted = nodelist.getSorted();
 
+
   if (node.isRoot() && node.waitingForRepositioning) {
+    // onMoved can trigger multiple times when Vivaldi-> process only once
+    // first pass has
+
+    rLog('STARTED ' + moveInfo.toIndex);
+
     node.waitingForRepositioning = false;
+
+    let searchBelow = moveInfo.toIndex;
 
     /*
     Move root node to correct index
@@ -104,41 +116,103 @@ chrome.tabs.onMoved.addListener((tabId, moveInfo) => {
     let wasMoved = false;
     let previous:Node;
 
-    let moveIndex = sorted.forEach((compare: Node, i: number) => {
-      // console.log(compare.tab.title, i);
+    let inspectSpot = (compare:Node, i:Number) => {
+      let isLast = i === sorted.length - 1;
+      // Have to take last spot
+      if (isLast) {
+        console.log('last spot');
+        return true;
+      }
+
+      let isRoot = compare.isRoot();
+      let noChildren = compare.children.isEmpty();
+
+      if (compare === node) {
+        console.error('compare to self', compare, i);
+        debugger;
+        return false;
+      }
+
+      if (compare.isRoot()) {
+        if (noChildren) {
+          console.log('childless root', compare, i);
+          return true;
+        } else {
+          // console.log('childful root', compare, i);
+          return false;
+        }
+      } else {
+        // console.log('child', compare, i);
+      }
+      return false;
+    };
+
+    console.log('Search below', searchBelow);
+    /*
+    let index = sorted.indexOf(node);
+    let filtered;
+    if (index > -1) {
+      sorted.splice(index, 1);
+    }
+    */
+
+    for (let i = searchBelow; i < sorted.length; i++) {
+      let compare:Node = sorted[i];
+         // console.log(compare.tab.title, i);
       // ei toimi vikalla tabilla
       let isLast = i === sorted.length - 1;
-      if (!wasMoved && isLast ||  (i >= moveInfo.toIndex && compare.isRoot() && compare.id !== node.id)) {
-        // Found correct index, move to it and exit
-        if (compare.id === node.id) {
-          console.error('compared to self', compare, i);
-        }
 
+      let goodSpot = inspectSpot(compare, i);
+
+      if (goodSpot) {
+        // Found correct index, move to it and exit
+
+        if (compare.id === node.id) {
+          console.error('self compare', node);
+        }
+        /*
         log(compare.tab.title, 'is good neighbour at at index', i, compare.tab.index, 'depth:', compare.depth(), compare);
-        log(previous.tab.title, 'is another neighbour at index', previous.tab.index, 'depth:', previous.depth(), previous);
+        //log(previous.tab.title, 'is another neighbour at index', previous.tab.index, 'depth:', previous.depth(), previous);
         log(node.tab.title, ' is moved to ', i, node);
+        */
 
         chrome.tabs.move([tabId], {index: i});
-
+        console.log(tabId, 'moving to', i, ' from ', searchBelow);
         chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli', {
           command: 'ShowId',
           tabId: compare.id,
         });
+        break;
 
+        /*
         chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli', {
           command: 'appendAttribute',
           attribute: 'style',
           value: 'background-color: red',
           tabId: compare.id,
         });
+        */
 
-        wasMoved = true;
-      } else {
-        // console.log(compare, 'is bad neighbour at ', i, compare.tab.index);
       }
+
       previous = compare;
+    }
+    nodelist.getSorted().forEach( (node:Node, i:number) => {
+      if (i !== node.tab.index) {
+        let tabId:number = node.id;
+        chrome.tabs.move([tabId], {index: i});
+        console.error('Invalid sorted order or tab index', i, node.tab.index, node);
+      }
+      chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli', {
+          command: 'SetText',
+          tabId: node.id,
+          text: node.tab.id + '-' + i + '-'
+      });
     });
+
   }
+
+  node.firstPassGone = true;
   // moveToCorrectPosition(node, moveInfo);
 });
 
@@ -158,7 +232,9 @@ chrome.tabs.onRemoved.addListener(function (tabId) {
     }
     nodelist.remove(node);
     node.remove();
-    console.log(node, nodelist.get(tabId));
+
+
+   // console.log(node, nodelist.get(tabId));
 });
 
 function main() {

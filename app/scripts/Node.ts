@@ -13,6 +13,7 @@ export default class Node implements IRawParams {
   tab: Tab;
   parent?: Node;
   waitingForRepositioning: boolean;
+  firstPassGone: boolean;
 
   constructor(tab: Tab) {
     if (tab.id) {
@@ -24,6 +25,7 @@ export default class Node implements IRawParams {
     this.title = tab.title;
     this.children = new NodeList();
     this.waitingForRepositioning = false;
+    this.firstPassGone = false;
   }
 
   traverseUp() {

@@ -104,6 +104,9 @@ export class NodeList {
     });
   }
 
+  isEmpty() {
+    return this.values.length === 0;
+  }
 
   store(windowId?:number) {
     // todo: 1 nodelist per window?

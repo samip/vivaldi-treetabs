@@ -47,6 +47,10 @@ class TabControl {
   }
 
   ShowId (tabId) {
+    this.SetText(tabId, tabId);
+  }
+
+  SetText (tabId, text) {
     let element = this.getElement(tabId);
     if (!element) {
       console.log('Missing element for tabId' + tabId);
@@ -54,7 +58,7 @@ class TabControl {
     }
     let oldTitle = element.querySelector('.title').innerText;
     if (oldTitle) {
-      element.querySelector('.title').innerText = tabId + ' ' + oldTitle;
+      element.querySelector('.title').innerText = text + ' ' + oldTitle;
     }
   }
 
@@ -96,7 +100,12 @@ chrome.runtime.onMessageExternal.addListener(
         tabcontrol.SetIndentStyle()
         break;
       case 'ShowId':
-        tabcontrol.ShowId(request.tabId, request.indentLevel);
+        if (request.tabId) {
+          tabcontrol.ShowId(request.tabId, request.indentLevel);
+        }
+        break;
+      case 'SetText':
+        tabcontrol.SetText(request.tabId, request.text);
         break;
       case 'appendAttribute':
         // UNSAFE
