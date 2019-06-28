@@ -16,7 +16,7 @@ class TabControl {
     console.log(this)
     console.log('Indent ' + tabId + ' to level ' + indentLevel)
 
-    let element = document.getElementById('tab-' + tabId)
+    let element = this.getElement(tabId);
 
     // element found -> set indent
     if (element) {
@@ -33,6 +33,33 @@ class TabControl {
 
   SetIndentStyle () {
     console.log('SetIndentStyle not implemented')
+  }
+
+  appendAttribute (tabId, attribute, value) {
+    let element = this.getElement(tabId);
+    let oldValue = element.getAttribute(attribute);
+    element.setAttribute(attribute, oldValue + ';' + value);
+  }
+
+  setAttribute (tabId, attribute, value) {
+    let element = this.getElement(tabId);
+    element.setAttribute(attribute, value);
+  }
+
+  ShowId (tabId) {
+    let element = this.getElement(tabId);
+    if (!element) {
+      console.log('Missing element for tabId' + tabId);
+      return;
+    }
+    let oldTitle = element.querySelector('.title').innerText;
+    if (oldTitle) {
+      element.querySelector('.title').innerText = tabId + ' ' + oldTitle;
+    }
+  }
+
+  getElement (tabId) {
+    return document.getElementById('tab-' + tabId)
   }
 }
 
@@ -67,7 +94,14 @@ chrome.runtime.onMessageExternal.addListener(
         break
       case 'SetIndentStyle':
         tabcontrol.SetIndentStyle()
-        break
+        break;
+      case 'ShowId':
+        tabcontrol.ShowId(request.tabId, request.indentLevel);
+        break;
+      case 'appendAttribute':
+        // UNSAFE
+        tabcontrol.appendAttribute(request.tabId, request.attribute, request.value)
+        break;
       default:
         console.log('Invalid command')
         break

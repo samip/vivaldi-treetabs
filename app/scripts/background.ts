@@ -52,64 +52,51 @@ chrome.commands.onCommand.addListener(function(command) {
 });
 
 chrome.tabs.onCreated.addListener((tab: Tab) => {
+  let log = (...obj:any) => {
+    let enable = true;
+    if (enable) {
+      console.log(...obj);
+    }
+  };
+
+
   let node = new Node(tab);
   nodelist.add(node);
-  console.log(tab);
   // child tab created
   if (tab.openerTabId) {
     let parentTab = nodelist.get(tab.openerTabId);
     let parentIndex = parentTab.tab.index + 1;
     // chrome.tabs.move([node.id], {index: parentIndex});
     node.parentTo(parentTab);
-    console.log('node', node, 'depth', node.depth());
-    console.log('parented to ', parentTab);
+    log('node', node, 'depth', node.depth());
+    log('parented to ', parentTab);
     // node.waitingForRepositioning = true;
     chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli', {command: 'IndentTab', tabId: tab.id, indentLevel: node.depth()});
   } else {
-    console.log('New root created at initial index', tab.index);
+    log('New root created at initial index', tab.index);
     // chrome.tabs.move([node.id], {index: 0});
-    //moveToCorrectPosition(node, {fromIndex: node.tab.index});
+    // moveToCorrectPosition(node, {fromIndex: node.tab.index});
     node.waitingForRepositioning = true;
   }
 });
 
 
 
-function moveToCorrectPosition(node:Node, moveInfo:any) {
-  let firstChild = true;
-  // let insideTree = !nodelist.get(moveInfo.toIndex).isRoot();
-  let actualMove = () => {
-    let sorted = nodelist.getSorted();
-    let toNode = sorted[moveInfo.toIndex];
-    if (toNode) {
-      node.parentTo(toNode);
-      console.log('Moved', node, 'under', toNode);
+chrome.tabs.onMoved.addListener((tabId, moveInfo) => {
+
+  let log = (...obj:any) => {
+    let enable = false;
+    if (enable) {
+      console.log(...obj);
     }
   };
 
-
-  if (node.isRoot()) {
-    let host = nodelist.getSorted()[moveInfo.toIndex];
-    if (firstChild) {
-    } else {
-      let lastSibling;
-    }
-  } else {
-    let sortedSiblings = node.siblings().values.sort((a: Node, b: Node): number => {
-      return a.tab.index - b.tab.index;
-    });
-    let firstSibling = sortedSiblings[0];
-    let lastSibling = sortedSiblings[sortedSiblings.length];
-  }
-
-}
-
-chrome.tabs.onMoved.addListener((tabId, moveInfo) => {
   let node:Node = nodelist.get(tabId);
   let sorted = nodelist.getSorted();
-  console.log(sorted, nodelist);
-  console.log(sorted.length, nodelist.values.length);
+
   if (node.isRoot() && node.waitingForRepositioning) {
+    node.waitingForRepositioning = false;
+
     /*
     Move root node to correct index
     Correct index is before the first root parent after initial index
@@ -124,12 +111,27 @@ chrome.tabs.onMoved.addListener((tabId, moveInfo) => {
       if (!wasMoved && isLast ||  (i >= moveInfo.toIndex && compare.isRoot() && compare.id !== node.id)) {
         // Found correct index, move to it and exit
         if (compare.id === node.id) {
-          console.error('compared to self');
+          console.error('compared to self', compare, i);
         }
-        console.log(compare.tab.title, 'is good neighbour at at index', i, compare.tab.index, 'depth:', compare.depth(), compare);
-        console.log(previous.tab.title, 'is another neighbour at index', previous.tab.index, 'depth:', previous.depth(), previous);
-        console.log(node.tab.title, ' is moved to ', i, node);
+
+        log(compare.tab.title, 'is good neighbour at at index', i, compare.tab.index, 'depth:', compare.depth(), compare);
+        log(previous.tab.title, 'is another neighbour at index', previous.tab.index, 'depth:', previous.depth(), previous);
+        log(node.tab.title, ' is moved to ', i, node);
+
         chrome.tabs.move([tabId], {index: i});
+
+        chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli', {
+          command: 'ShowId',
+          tabId: compare.id,
+        });
+
+        chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli', {
+          command: 'appendAttribute',
+          attribute: 'style',
+          value: 'background-color: red',
+          tabId: compare.id,
+        });
+
         wasMoved = true;
       } else {
         // console.log(compare, 'is bad neighbour at ', i, compare.tab.index);

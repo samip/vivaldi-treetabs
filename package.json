@@ -59,5 +59,7 @@
     "webpack-stream": "3.x.x",
     "yargs": "^8.x.x"
   },
-  "dependencies": {}
+  "dependencies": {
+    "gulp-open": "^3.0.1"
+  }
 }
