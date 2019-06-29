@@ -10,8 +10,19 @@
 import 'chromereload/devonly';
 import Tab = chrome.tabs.Tab;
 import Node from './Node';
-import {nodelist} from './NodeList';
+import {NodeList, nodelist} from './NodeList';
 
+let events:any = [];
+
+function logEvent(id:number|undefined, type:any, param:any) {
+  if (!id) {
+    return;
+  }
+  if (typeof events[id] === 'undefined') {
+    events[id] = [];
+  }
+  events[id].push( {'type': type, 'param': param, 'target':id });
+}
 
 const options = {
   // Tab hierarchy is saved into local storage and restored if possible
@@ -59,7 +70,9 @@ chrome.tabs.onCreated.addListener((tab: Tab) => {
     }
   };
 
+  logEvent(tab.id, 'created', tab);
 
+  console.log(events);
   let node = new Node(tab);
   nodelist.add(node);
   // child tab created
@@ -87,6 +100,11 @@ function rLog(msg:any) {
 }
 
 chrome.tabs.onMoved.addListener((tabId, moveInfo) => {
+  let node:Node = nodelist.get(tabId);
+  logEvent(tabId, 'moved' + (node.waitingForRepositioning) ? ' waiting' : 'skip', moveInfo);
+  if (node.waitingForRepositioning) {
+    // debugger;
+  }
 
   let log = (...obj:any) => {
     let enable = true;
@@ -95,11 +113,16 @@ chrome.tabs.onMoved.addListener((tabId, moveInfo) => {
     }
   };
 
-  let node:Node = nodelist.get(tabId);
-  let sorted = nodelist.getSorted();
+
+
+
+
+
 
 
   if (node.isRoot() && node.waitingForRepositioning) {
+     let sorted = nodelist.getSorted();
+
     // onMoved can trigger multiple times when Vivaldi-> process only once
     // first pass has
 
@@ -107,7 +130,7 @@ chrome.tabs.onMoved.addListener((tabId, moveInfo) => {
 
     node.waitingForRepositioning = false;
 
-    let searchBelow = moveInfo.toIndex;
+    let searchBelow = moveInfo.toIndex; // search for spot below created tab
 
     /*
     Move root node to correct index
@@ -116,7 +139,10 @@ chrome.tabs.onMoved.addListener((tabId, moveInfo) => {
     let wasMoved = false;
     let previous:Node;
 
-    let inspectSpot = (compare:Node, i:Number) => {
+
+
+    console.log('Search below', searchBelow);
+    let inspectSpot = (compare:Node, i:number) => {
       let isLast = i === sorted.length - 1;
       // Have to take last spot
       if (isLast) {
@@ -127,9 +153,10 @@ chrome.tabs.onMoved.addListener((tabId, moveInfo) => {
       let isRoot = compare.isRoot();
       let noChildren = compare.children.isEmpty();
 
-      if (compare === node) {
+      if (compare.id === node.id) {
+        console.log(events);
         console.error('compare to self', compare, i);
-        debugger;
+        // debugger;
         return false;
       }
 
@@ -142,12 +169,18 @@ chrome.tabs.onMoved.addListener((tabId, moveInfo) => {
           return false;
         }
       } else {
-        // console.log('child', compare, i);
+        const next = sorted[i];
+        if (next.isRoot()) {
+          console.log('child next is root', next);
+
+          return true;
+        }
+        return false;
+        return next.isRoot();
+
       }
       return false;
     };
-
-    console.log('Search below', searchBelow);
     /*
     let index = sorted.indexOf(node);
     let filtered;
@@ -168,7 +201,10 @@ chrome.tabs.onMoved.addListener((tabId, moveInfo) => {
         // Found correct index, move to it and exit
 
         if (compare.id === node.id) {
-          console.error('self compare', node);
+          console.error('self compare', node, i);
+          console.log(events[node.id]);
+          i++;
+          continue;
         }
         /*
         log(compare.tab.title, 'is good neighbour at at index', i, compare.tab.index, 'depth:', compare.depth(), compare);
@@ -197,11 +233,12 @@ chrome.tabs.onMoved.addListener((tabId, moveInfo) => {
 
       previous = compare;
     }
-    nodelist.getSorted().forEach( (node:Node, i:number) => {
+
+    sorted.forEach( (node:Node, i:number) => {
       if (i !== node.tab.index) {
         let tabId:number = node.id;
-        chrome.tabs.move([tabId], {index: i});
         console.error('Invalid sorted order or tab index', i, node.tab.index, node);
+        console.log(events[tabId]);
       }
       chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli', {
           command: 'SetText',

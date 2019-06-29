@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Title</title>
     <style>
+
       body, html {
         margin: 0;
         padding: 0;
@@ -19,22 +20,31 @@
       padding:0 5px;
       background-color: blueviolet;
     }
-      div.index-number:nth-child(even) {
-   background-color: violet;
-      }
+
+    div.index-number:nth-child(even) {
+        background-color: violet;
+    }
+
+    .left {
+      float: left;
+    }
+
+    .right {
+      float: right;
+      margin-right: 80%;
+    }
 
     </style>
-
 
 </head>
 <body>
 
-<div id="index-list" style="float:left">
+<div id="index-list" class="left">
 
 </div>
 
-<div style="float:right; margin-right: 80%">
-  <ol>
+<div id="content" class="right">
+  <ol id="link-list">
     <li><a title="0" class="test-link" href="testpage.html?a=first">First</a>
     <li><a class="test-link" href="testpage.html?a=second">Second</a>
     <li><a class="test-link" href="testpage.html?a=third">Third</a>

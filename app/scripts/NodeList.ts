@@ -29,6 +29,8 @@ export class NodeList {
     });
   }
 
+
+
   remove(node: Node) {
     let key = ''+node.id;
     let index = this.keys.indexOf(key, 0);
@@ -43,7 +45,7 @@ export class NodeList {
 
 
   build() {
-    chrome.tabs.query({}, function(tabs) {
+    chrome.tabs.query({currentWindow:true}, function(tabs) {
       let reparent_queue = new NodeList();
 
       tabs.forEach(function (item) {

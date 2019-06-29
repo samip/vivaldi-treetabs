@@ -5,6 +5,7 @@ Called from vivaldi-tabs extension to set tab indentation.
 */
 
 class TabControl {
+
   constructor () {
     this.indentStep = 20
     this.indentUnit = 'px'
@@ -56,9 +57,20 @@ class TabControl {
       console.log('Missing element for tabId' + tabId);
       return;
     }
-    let oldTitle = element.querySelector('.title').innerText;
+    let oldTitle = element.querySelector('.title');
+    let oldCustom = oldTitle.querySelector('.custom-title')
+    if (oldCustom) {
+      oldCustom.innerText = text;
+    } else {
+      let textElement = document.createElement('span');
+      oldTitle.innerHTML = '<span class="custom-title">' + text + '</span>' + oldTitle.innerHTML;
+      //textElement.classList.add('custom-title');
+      //textElement.innerText = text;
+
+      //textElement.prepend(oldTitle);
+    }
     if (oldTitle) {
-      element.querySelector('.title').innerText = text + ' ' + oldTitle;
+      // element.querySelector('.title > .custom-title').innerText = text + ' ' + oldTitle;
     }
   }
 
