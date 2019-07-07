@@ -1,5 +1,6 @@
 import Tab = chrome.tabs.Tab;
-import {NodeList} from './NodeList';
+import {NodeList, nodelist} from './NodeList';
+import Command from './Command';
 
 interface IRawParams {
     [id: string]: any;
@@ -14,30 +15,52 @@ export default class Node implements IRawParams {
   parent?: Node;
   waitingForRepositioning: boolean;
   firstPassGone: boolean;
+  initialIndex: number;
+  initialNodelist: NodeList;
+  initialNodeValues: Node[];
+  repositionNext:boolean;
 
-  constructor(tab: Tab) {
-    if (tab.id) {
-      this.id = tab.id;
+  constructor(tab?: Tab) {
+    if (!tab) {
+      console.log('created root');
+      this.id = 0;
     } else {
-      throw new Error('No tab id');
+      if (tab.id) {
+        this.id = tab.id;
+      } else {
+        throw new Error('No tab id');
+      }
+      this.tab = tab;
+      this.title = tab.title;
     }
-    this.tab = tab;
-    this.title = tab.title;
     this.children = new NodeList();
     this.waitingForRepositioning = false;
     this.firstPassGone = false;
+    this.initialNodeValues = [];
+    this.repositionNext = false;
   }
 
   traverseUp() {
     let helper = function(i:any, c:any): any {
       if (i.parent) {
-        return helper(i.parent, ++c);
+        if (i.parent.id === 0) {
+          return helper(i.parent, c);
+        } else {
+          return helper(i.parent, ++c);
+        }
       } else {
         return c;
       }
     };
 
     return helper(this, 0);
+  }
+
+  command(command: string, parameters:any={}) {
+    parameters['tabId'] = this.id;
+    let obj = new Command(command, parameters);
+    obj.send();
+    return obj;
   }
 
   isRoot(): boolean {
@@ -84,7 +107,7 @@ export default class Node implements IRawParams {
 
     if (this.parent) {
       this.parent.children.applyRecursive((child: Node) => {
-        child.update();
+        // child.update();
       });
     }
   }
@@ -120,3 +143,4 @@ export default class Node implements IRawParams {
 
 }
 
+export let rootNode:Node = new Node();

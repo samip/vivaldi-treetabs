@@ -1,5 +1,5 @@
 import Node from './Node';
-
+import rootNode from './Node';
 export type NodeCallback = (node: Node) => any;
 
 export class NodeList {
@@ -44,7 +44,7 @@ export class NodeList {
   }
 
 
-  build() {
+  build(root:Node) {
     chrome.tabs.query({currentWindow:true}, function(tabs) {
       let reparent_queue = new NodeList();
 
@@ -57,11 +57,13 @@ export class NodeList {
                 parent_id = null;
               }
               nodelist.add(node);
+
               // key[parent_id] => value[tab] populated with tabs waiting to be parented
 
               // No parent_id so it's top-level
               if (!parent_id) {
                   node.parentTo();
+
               }
               // Parent already in container -> reparent self to parent
               else if (nodelist.get(parent_id)) {

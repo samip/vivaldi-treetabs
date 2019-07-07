@@ -30,8 +30,7 @@
     }
 
     .right {
-      float: right;
-      margin-right: 80%;
+      float: left;
     }
 
     </style>
@@ -49,7 +48,17 @@
     <li><a class="test-link" href="testpage.html?a=second">Second</a>
     <li><a class="test-link" href="testpage.html?a=third">Third</a>
   </ol>
-  <a href="vivaldi://extensions/">Extensions</a>
+
+  <ol>
+    <li><a href="vivaldi://extensions/">Extensions</a>
+    <li><a href="#" onclick="messageExtension()">Send Message</a>
+    <li><a href="http://localhost:2022/">http://localhost:2022/</a>
+    <li><a href="#" onclick="messageExtension('build')">message: build()</a>
+    <li><a href="#" onclick="messageExtension('get')">message: get()</a>
+    <li><a href="#" onclick="messageExtension('show_ids')">message: show_ids()</a>
+  </ol>
+
+  <pre id="console"></pre>
 </div>
 
 
@@ -75,6 +84,25 @@
       div.innerText = i;
       div.classList.add('index-number')
       target.appendChild(div);
+    }
+  }
+  function messageExtension(param) {
+
+    if (!param) {
+      param = '';
+    }
+
+    if (chrome && chrome.runtime && chrome.runtime.sendMessage) {
+      let extension_id =
+      chrome.runtime.sendMessage(
+        "pifflcjhdpciekonjecjkmpabmpfgddm",
+        { command: param },
+        function(response) {
+          console.log(response);
+        }
+      );
+    } else {
+      console.log('No chrome runtime. Check "externally_connectable" property in manifest.json');
     }
   }
 
