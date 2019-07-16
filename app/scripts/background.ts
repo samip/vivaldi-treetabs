@@ -13,6 +13,17 @@ import Node from './Node';
 import {NodeList, nodelist} from './NodeList';
 
 
+let events:any = [];
+
+function logEvent(id:number|undefined, type:any, param:any) {
+  if (!id) {
+    return;
+  }
+  if (typeof events[id] === 'undefined') {
+    events[id] = [];
+  }
+  events[id].push( {'type': type, 'param': param, 'target':id });
+}
 
 const onInstalled = chrome.runtime.onInstalled.addListener((details) => {
   console.log('previousVersion', details.previousVersion);
@@ -71,31 +82,53 @@ const onCreated = chrome.tabs.onCreated.addListener((tab: Tab) => {
   if (tab.openerTabId) {
     nodelist.add(node);
     let parentTab = nodelist.get(tab.openerTabId);
-    node.parentTo(parentTab);
-    node.command('IndentTab', {tabId: tab.id, indentLevel: node.depth()});
+    if (!parentTab) {
+      console.error('Parent not found');
+      let fixNode;
+      chrome.tabs.get(tab.openerTabId, (tab:Tab) => {
+        console.log(tab);
+        fixNode = new Node(tab);
+        nodelist.add(fixNode);
+        node.parentTo(fixNode);
+        node.command('IndentTab', {tabId: tab.id, indentLevel: node.depth()});
+        console.log('Fixed', fixNode);
+      });
+    } else {
+      node.parentTo(parentTab);
+      node.command('IndentTab', {tabId: tab.id, indentLevel: node.depth()});
+    }
   } else {
     nodelist.add(node);
     node.parentTo(root);
     node.initialIndex = tab.index;
     node.waitingForRepositioning = true;
+    console.log('Created ', node, ' parented to ', root);
+    if (!root.children.get(node.id)) {
+      console.error('Parenting failed');
+    }
   }
 });
 
-const onRemoved = chrome.tabs.onRemoved.addListener(function (tabId) {
+const onAfterRemoval = chrome.tabs.onRemoved.addListener(function (tabId) {
     let node = nodelist.get(tabId);
+    console.log('onRemoved' + tabId);
     if (!node) {
         // should never happen
         console.error('Tab [' + tabId + '] not in container', root);
+        console.log('Container:', nodelist, 'root:', root);
         return;
+    } else {
+      console.log('Removed ' + tabId);
     }
-
-    nodelist.remove(node);
     node.remove();
+    nodelist.remove(node);
+
 });
 
 const onMoved = chrome.tabs.onMoved.addListener((tabId, moveInfo) => {
   let node:Node = nodelist.get(tabId);
   const correctEvent = node.initialIndex === moveInfo.fromIndex;
+
 
   if (node.waitingForRepositioning && correctEvent) {
     let searchBelow = moveInfo.toIndex; // search for spot below created tab
@@ -110,7 +143,21 @@ const onMoved = chrome.tabs.onMoved.addListener((tabId, moveInfo) => {
         let compare = nodelist.get(id);
         if (!compare) {
           compare = new Node(items[i]);
+          if (items[i].openerTabId) {
+            let opener:number = items[i].openerTabId || 0;
+            let parent = nodelist.get(opener);
+            if (parent) {
+              compare.parentTo(parent);
+            } else {
+              console.error('Compare missing parent');
+              debugger;
+            }
+          } else {
+            compare.parentTo(root);
+          }
           nodelist.add(compare);
+          console.log('Found and not in container: ', compare);
+
         }
 
         let next;

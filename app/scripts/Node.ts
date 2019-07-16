@@ -12,11 +12,10 @@ export default class Node implements IRawParams {
   title: string|undefined;
   children: NodeList;
   tab: Tab;
-  parent?: Node;
+  parent: Node;
   waitingForRepositioning: boolean;
   firstPassGone: boolean;
   initialIndex: number;
-  initialNodelist: NodeList;
   initialNodeValues: Node[];
   repositionNext:boolean;
 
@@ -33,6 +32,7 @@ export default class Node implements IRawParams {
       this.tab = tab;
       this.title = tab.title;
     }
+
     this.children = new NodeList();
     this.waitingForRepositioning = false;
     this.firstPassGone = false;
@@ -73,72 +73,58 @@ export default class Node implements IRawParams {
   }
 
   isSibling(compare: Node): boolean {
-    if (this.parent) {
-      let sameParent = this.parent.children.get(compare.id) !== null;
-      console.log(sameParent);
-      return sameParent;
-    }
-    // both roots -> siblings
-    return false;
+    return this.parent.children.get(compare.id) !== null;
   }
 
   siblings(): NodeList {
-    if (this.parent) {
       return this.parent.children;
-    }
-    return new NodeList();
   }
 
   depth(): number {
     return this.traverseUp();
   }
 
-  parentTo(parent?: Node) {
-    // Remove from old parent's children
+  parentTo(parent: Node) {
+    // already had parent -> remove from child list
     if (this.parent) {
+      /*
+      Tämä kai rikkoo reparentin kun koko child node poistetaan?
       this.parent.children.remove(this);
+       */
     }
-
-    if (parent) {
-      parent.children.add(this);
-    }
-    // allow setting null (root tab)
+    // add to new parent's child list
+    parent.children.add(this);
     this.parent = parent;
-
-    if (this.parent) {
-      this.parent.children.applyRecursive((child: Node) => {
-        // child.update();
-      });
-    }
   }
 
   remove() {
-    if (this.parent) {
-      // remove from parent's children
-      this.parent.children.remove(this);
-    }
     // reparent own children to own parent and redraw
-    /*
-    this.children.values.forEach( (childNode: Node) => {
-        childNode.parentTo(this.parent);
-        childNode.update();
-    });
-    */
-    this.children.values.forEach( (childNode: Node) => {
-        childNode.parentTo(this.parent);
-        childNode.update();
+
+    this.children.applyRecursive((child: Node) => {
+      if (child.parent && child.parent.id === this.id) {
+        child.parentTo(this.parent);
+        console.log(child.id, 'parented to ', (this.parent) ? this.parent.id : 'root');
+      } else {
+        console.error('Misparented', child);
+      }
+
+      console.log(child.id, 'depth', child.depth());
+      console.log(child.id, 'parent', child.parent);
+      child.update();
     });
 
-    if (this.parent) {
-      this.parent.children.applyRecursive((child: Node) => {
-        child.update();
-      });
-    }
-
+    this.parent.children.remove(this);
   }
 
   update() {
-    chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli', {command: 'IndentTab', tabId: this.id, indentLevel: this.depth()});
+    let depth = this.depth();
+    console.log('Update ' + this + ' depth ' + depth);
+    chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli',
+      {
+        'command': 'IndentTab',
+        'tabId': this.id,
+        'indentLevel': depth
+      });
   }
 
 }

@@ -107,7 +107,7 @@ chrome.runtime.onMessageExternal.addListener(
         } else {
           tabcontrol.IndentTab(request.tabId, request.indentLevel)
         }
-        break
+        break;
       case 'SetIndentStyle':
         tabcontrol.SetIndentStyle()
         break;

@@ -23,9 +23,11 @@ export class NodeList {
 
 
   applyRecursive(callback: NodeCallback) {
+    let count = this.values.length;
+
     this.values.forEach( (childNode: Node) => {
-        callback(childNode);
-        childNode.children.applyRecursive(callback);
+      callback(childNode);
+      return childNode.children.applyRecursive(callback);
     });
   }
 
@@ -39,8 +41,13 @@ export class NodeList {
     delete this.nodes[key];
   }
 
-  get(id: Number): Node {
+  get(id: number, callback?:any): Node {
+    let useApi = true;
+    if (useApi && callback) {
+      chrome.tabs.get(id, callback);
+    }
     return this.nodes['' + id];
+
   }
 
 
@@ -62,8 +69,7 @@ export class NodeList {
 
               // No parent_id so it's top-level
               if (!parent_id) {
-                  node.parentTo();
-
+                  node.parentTo(root);
               }
               // Parent already in container -> reparent self to parent
               else if (nodelist.get(parent_id)) {
