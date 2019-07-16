@@ -4,6 +4,9 @@
     Estä tabia aukeammasta keskelle treetä
     Tabin siirron käsittely
 
+    dump tab id and index
+    chrome.tabs.query({}, function(c) { c.forEach ( item => { console.log(item.id, item.index) })});
+
 */
 
 // Enable chromereload by uncommenting this line:
@@ -83,11 +86,21 @@ const onCreated = chrome.tabs.onCreated.addListener((tab: Tab) => {
     nodelist.add(node);
     let parentTab = nodelist.get(tab.openerTabId);
     if (!parentTab) {
-      console.error('Parent not found');
+      console.error('Parent '+ tab.openerTabId +' not found for ' + tab);
       let fixNode;
       chrome.tabs.get(tab.openerTabId, (tab:Tab) => {
         console.log(tab);
+        let fixParent = root;
+
         fixNode = new Node(tab);
+        if (tab.openerTabId) {
+          let fixParent = nodelist.get(tab.openerTabId);
+          if (!fixParent) {
+            console.table(nodelist.values);
+            console.error('Fix parent fail', fixParent, ' for ', tab);
+          }
+        }
+        fixNode.parentTo(fixParent);
         nodelist.add(fixNode);
         node.parentTo(fixNode);
         node.command('IndentTab', {tabId: tab.id, indentLevel: node.depth()});
@@ -95,6 +108,7 @@ const onCreated = chrome.tabs.onCreated.addListener((tab: Tab) => {
       });
     } else {
       node.parentTo(parentTab);
+      console.log(node, node.depth());
       node.command('IndentTab', {tabId: tab.id, indentLevel: node.depth()});
     }
   } else {
@@ -107,6 +121,7 @@ const onCreated = chrome.tabs.onCreated.addListener((tab: Tab) => {
       console.error('Parenting failed');
     }
   }
+
 });
 
 const onAfterRemoval = chrome.tabs.onRemoved.addListener(function (tabId) {
@@ -122,97 +137,55 @@ const onAfterRemoval = chrome.tabs.onRemoved.addListener(function (tabId) {
     }
     node.remove();
     nodelist.remove(node);
-
 });
+
+
 
 const onMoved = chrome.tabs.onMoved.addListener((tabId, moveInfo) => {
   let node:Node = nodelist.get(tabId);
   const correctEvent = node.initialIndex === moveInfo.fromIndex;
 
-
   if (node.waitingForRepositioning && correctEvent) {
     let searchBelow = moveInfo.toIndex; // search for spot below created tab
+    console.log('Starting reparenting. Root state: ', root.children);
 
-    chrome.tabs.query({}, function (items) {
-      for (let i = 0; i < items.length; i++) {
-        let id = items[i].id;
-        if (!id) {
-          continue;
-        }
+    let rootIndices:number[] = [];
 
-        let compare = nodelist.get(id);
-        if (!compare) {
-          compare = new Node(items[i]);
-          if (items[i].openerTabId) {
-            let opener:number = items[i].openerTabId || 0;
-            let parent = nodelist.get(opener);
-            if (parent) {
-              compare.parentTo(parent);
-            } else {
-              console.error('Compare missing parent');
-              debugger;
-            }
-          } else {
-            compare.parentTo(root);
+    let processed = 0;
+    let minIndex:number;
+
+
+    chrome.tabs.get(tabId, (tab:Tab) => {
+      console.log('New index:' + tab.index, 'searchbelow:' + searchBelow);
+
+      root.children.values.forEach((item) => {
+        chrome.tabs.get(item.id, (tab:Tab) => {
+          if (tab.openerTabId) {
+            console.error('Root not root', tab, nodelist.get(tab.id||0));
           }
-          nodelist.add(compare);
-          console.log('Found and not in container: ', compare);
-
-        }
-
-        let next;
-        let isLast = i === items.length - 1;
-        if (!isLast) {
-          let next_chrome = items[i + 1];
-          if (next_chrome) {
-            let next_id = next_chrome.id;
-
-            if (next_id) {
-              next = nodelist.get(next_id);
+          nodelist.get(item.id).command('appendAttribute', {attribute:'style', values: 'background-color:red'});
+          let prev = --tab.index;
+          if (prev > searchBelow) {
+            if (!minIndex || prev <= minIndex) {
+              minIndex = prev;
             }
-          } else {
-            isLast = true;
+          } else if (prev === searchBelow) {
+            minIndex = prev;
+            console.log('exit untouched at ', prev);
+            return;
           }
-        } else {
-          isLast = true;
-        }
 
-        let goodSpot = i >= searchBelow && inspectSpot(compare, next, i);
+          processed++;
 
-        if (isLast || goodSpot) {
-          // Found correct index, move to it and exit
-          chrome.tabs.move([tabId], {index: i});
-          console.log(tabId, 'moving below',compare.tab.id, 'index:', compare.tab.index, i, ' from ', searchBelow);
-          node.waitingForRepositioning = false;
-          return;
-        }
-      }
+          if (processed === root.children.values.length) {
+            console.log(rootIndices, 'searchbelow:', searchBelow, 'found', minIndex);
+            minIndex = (minIndex) ? minIndex : 999;
+            chrome.tabs.move([item.id], {index: minIndex});
+          }
+        });
+
+      });
     });
-
-    let inspectSpot = (compare:Node, next:Node|undefined, i:number) => {
-      let noChildren = compare.children.isEmpty();
-
-      if (compare.id === node.id) {
-        return false;
-      }
-
-      if (compare.isRoot()) {
-        if (noChildren) {
-          console.log('childless root', compare, i);
-          return true;
-        } else {
-          // console.log('childful root', compare, i);
-          return false;
-        }
-      } else {
-        if (next && next.isRoot()) {
-          console.log('child next is root', next);
-          return true;
-        }
-        return false;
-      }
-    };
-
   }
 });
 
