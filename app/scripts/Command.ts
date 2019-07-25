@@ -1,3 +1,7 @@
+/*
+Sends commands to browser hook
+ */
+
 export default class Command {
   command: string;
   browserExtensionId: string;

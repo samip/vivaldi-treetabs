@@ -1,6 +1,10 @@
 import Tab = chrome.tabs.Tab;
-import {NodeList, nodelist} from './NodeList';
+import {tabContainer, TabContainer} from './TabContainer';
 import Command from './Command';
+import Window from './Window';
+import {windowContainer} from './WindowContainer';
+
+export type NodeCallback = (node: Node) => any;
 
 interface IRawParams {
     [id: string]: any;
@@ -10,7 +14,7 @@ export default class Node implements IRawParams {
   [k: string]: any;
   id: number;
   title: string|undefined;
-  children: NodeList;
+  children: TabContainer;
   tab: Tab;
   parent: Node;
   waitingForRepositioning: boolean;
@@ -33,7 +37,7 @@ export default class Node implements IRawParams {
       this.title = tab.title;
     }
 
-    this.children = new NodeList();
+    this.children = new TabContainer();
     this.waitingForRepositioning = false;
     this.firstPassGone = false;
     this.initialNodeValues = [];
@@ -76,12 +80,18 @@ export default class Node implements IRawParams {
     return this.parent.children.get(compare.id) !== null;
   }
 
-  siblings(): NodeList {
-      return this.parent.children;
-  }
 
   depth(): number {
     return this.traverseUp();
+  }
+
+  getWindow(): Window {
+    let windowId = this.tab.windowId;
+    let window = windowContainer.getById(windowId);
+    if (!window) {
+      throw new Error('Window not in container');
+    }
+    return window;
   }
 
   parentTo(parent: Node) {
@@ -97,10 +107,33 @@ export default class Node implements IRawParams {
     this.parent = parent;
   }
 
+  applyChildren(callback: NodeCallback) {
+    /*
+    let count = this.values.length;
+
+    this.values.forEach( (childNode: Node) => {
+      callback(childNode);
+      return childNode.children.applyRecursive(callback);
+    });
+    */
+
+    this.children.tabs.forEach( (node:Node, key:number) => {
+      callback(node);
+      return node.applyChildren(callback);
+    });
+
+  }
+
   remove() {
     // reparent own children to own parent and redraw
 
+    this.applyChildren((child:Node) => {
+      child.parentTo(this.parent);
+      child.update();
+    });
+    /*
     this.children.applyRecursive((child: Node) => {
+
       if (child.parent && child.parent.id === this.id) {
         child.parentTo(this.parent);
         console.log(child.id, 'parented to ', (this.parent) ? this.parent.id : 'root');
@@ -112,8 +145,10 @@ export default class Node implements IRawParams {
       console.log(child.id, 'parent', child.parent);
       child.update();
     });
+    */
 
     this.parent.children.remove(this);
+    // tabContainer.remove(this);
   }
 
   update() {
