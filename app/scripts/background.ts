@@ -1,4 +1,3 @@
-// Enable chromereload by uncommenting this line:
 import 'chromereload/devonly';
 import Node from './Node';
 import {windowContainer} from './WindowContainer';
@@ -27,9 +26,33 @@ class ChromeCallbacks {
             node.command('ShowId');
           });
           break;
+        case 'element':
+          let first = tabContainer.tabs.values().next().value;
+          let ret = first.command('getElement');
+          console.log('test', ret);
+          break;
         case 'store':
           break;
       }
+    }
+  }
+
+  static onCommand(command:any) {
+    let log = (message:string) => {
+     let enabled = true;
+     if (enabled) {
+       console.log(message);
+     }
+    };
+    log('Received command:' + command);
+    switch (command) {
+      case 'close-child-tabs':
+        log('Close child tabs');
+        console.log('Close child tabs shortcut');
+        break;
+      default:
+        console.error('Unknown command');
+        break;
     }
   }
 
@@ -39,7 +62,6 @@ class ChromeCallbacks {
 
     // child tab created. set it's parent tab and indent it.
     if (tab.openerTabId) {
-
       let parentNode = tabContainer.get(tab.openerTabId);
       if (parentNode) {
         node.parentTo(parentNode);
@@ -50,8 +72,9 @@ class ChromeCallbacks {
 
       let parentTab = tabContainer.get(tab.openerTabId);
       node.parentTo(parentTab);
-      console.log(node, 'parented to', parentTab);
-      node.command('IndentTab', {tabId: tab.id, indentLevel: node.depth()});
+      // node.command('IndentTab', {tabId: tab.id, indentLevel: node.depth()});
+      node.renderIndentation();
+      console.log('Child tab', node, 'parented to', parentTab);
     }
     // top level tab -> parent to window's root node
     else {
@@ -59,9 +82,8 @@ class ChromeCallbacks {
       node.parentTo(root);
       node.initialIndex = tab.index;
       node.waitingForRepositioning = true;
-      console.log('Created ', node, ' parented to ', root);
+      console.log('Root tab ', node, ' parented to ', root);
     }
-
   }
 
   static onTabMoved(tabId:number, moveInfo:chrome.tabs.TabMoveInfo) {
@@ -71,17 +93,11 @@ class ChromeCallbacks {
 
     if (node.waitingForRepositioning && correctEvent) {
       let searchBelow = moveInfo.toIndex; // search for spot below created tab
-      console.log('Starting reparenting. Root state: ', root.children);
-
-      let rootIndices:number[] = [];
-
       let processed = 0;
       let minIndex:number;
 
-
+      // TODO(?): keep track of tab index to avoid api call
       chrome.tabs.get(tabId, (tab:chrome.tabs.Tab) => {
-        console.log('New index:' + tab.index, 'searchbelow:' + searchBelow);
-
         root.children.tabs.forEach((item) => {
           chrome.tabs.get(item.id, (tab:chrome.tabs.Tab) => {
             if (tab.openerTabId) {
@@ -102,26 +118,40 @@ class ChromeCallbacks {
             processed++;
 
             if (processed === root.children.tabs.size) {
-              console.log(rootIndices, 'searchbelow:', searchBelow, 'found', minIndex);
               minIndex = (minIndex) ? minIndex : 999;
               chrome.tabs.move([item.id], {index: minIndex});
             }
           });
-
         });
       });
     }
   }
 
+
   static onTabRemoved(tabId:number) {
     let node = tabContainer.get(tabId);
-    console.log('onRemoved' + tabId);
-    if (!node) {
-        // should never happen
-      throw new Error('Tab [' + tabId + '] not in container');
-    }
     node.remove();
     tabContainer.remove(node);
+  }
+
+
+  /*
+  Tab moved to new window -> reparent to new Window's root
+   */
+  static onTabAttached(tabId:number, info:chrome.tabs.TabAttachInfo) {
+    let node = tabContainer.get(tabId);
+    let newWindow = windowContainer.getById(info.newWindowId);
+    node.parentTo(newWindow.root);
+    node.renderIndentation();
+  }
+
+  ///
+  static onTabDetached(tabId:number, info:chrome.tabs.TabDetachInfo) {
+    let node = tabContainer.get(tabId);
+    node.children.tabs.forEach((child: Node, key: number) => {
+      child.parentTo(node.parent);
+      child.renderIndentation();
+    });
   }
 
   static onWindowCreated(window:chrome.windows.Window) {
@@ -132,7 +162,6 @@ class ChromeCallbacks {
   static onWindowRemoved(windowId:number, filters:WindowEventFilter|undefined) {
     let winObj = windowContainer.getById(windowId);
     windowContainer.remove(winObj);
-    console.log('Window removed');
   }
 
 
@@ -143,8 +172,11 @@ class ChromeCallbacks {
 chrome.windows.getAll(windowContainer.initFromArray.bind(windowContainer));
 chrome.tabs.query({}, tabContainer.initFromArray.bind(tabContainer));
 chrome.runtime.onMessageExternal.addListener(ChromeCallbacks.onMessageExternal);
+chrome.commands.onCommand.addListener(ChromeCallbacks.onCommand);
 chrome.tabs.onCreated.addListener(ChromeCallbacks.onTabCreated);
 chrome.tabs.onMoved.addListener(ChromeCallbacks.onTabMoved);
 chrome.tabs.onRemoved.addListener(ChromeCallbacks.onTabRemoved);
+chrome.tabs.onAttached.addListener(ChromeCallbacks.onTabAttached);
+chrome.tabs.onDetached.addListener(ChromeCallbacks.onTabDetached);
 chrome.windows.onCreated.addListener(ChromeCallbacks.onWindowCreated);
 chrome.windows.onRemoved.addListener(ChromeCallbacks.onWindowRemoved);

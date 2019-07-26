@@ -9,7 +9,6 @@ export class TabContainer {
   }
 
   add(node:Node): void {
-    // todo: handling null tab id
     let key = node.id;
     this.tabs.set(key, node);
   }
@@ -17,8 +16,6 @@ export class TabContainer {
   get(id:number): Node {
     let node = this.tabs.get(id);
     if (!node) {
-      console.log(this.tabs);
-      debugger;
       throw new Error('Invalid access for node id' + id);
     }
     return node;

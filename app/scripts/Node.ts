@@ -1,5 +1,4 @@
-import Tab = chrome.tabs.Tab;
-import {tabContainer, TabContainer} from './TabContainer';
+import {TabContainer} from './TabContainer';
 import Command from './Command';
 import Window from './Window';
 import {windowContainer} from './WindowContainer';
@@ -13,17 +12,13 @@ interface IRawParams {
 export default class Node implements IRawParams {
   [k: string]: any;
   id: number;
-  title: string|undefined;
   children: TabContainer;
-  tab: Tab;
+  tab: chrome.tabs.Tab;
   parent: Node;
   waitingForRepositioning: boolean;
-  firstPassGone: boolean;
   initialIndex: number;
-  initialNodeValues: Node[];
-  repositionNext:boolean;
 
-  constructor(tab?: Tab) {
+  constructor(tab?: chrome.tabs.Tab) {
     if (!tab) {
       console.log('created root');
       this.id = 0;
@@ -31,17 +26,14 @@ export default class Node implements IRawParams {
       if (tab.id) {
         this.id = tab.id;
       } else {
+        // should never happen
         throw new Error('No tab id');
       }
       this.tab = tab;
-      this.title = tab.title;
     }
 
     this.children = new TabContainer();
     this.waitingForRepositioning = false;
-    this.firstPassGone = false;
-    this.initialNodeValues = [];
-    this.repositionNext = false;
   }
 
   traverseUp() {
@@ -60,6 +52,7 @@ export default class Node implements IRawParams {
     return helper(this, 0);
   }
 
+  /** Send tab specific command to vivaldiTabsBrowserHook.js **/
   command(command: string, parameters:any={}) {
     parameters['tabId'] = this.id;
     let obj = new Command(command, parameters);
@@ -67,24 +60,12 @@ export default class Node implements IRawParams {
     return obj;
   }
 
-  isRoot(): boolean {
-    if (this.tab) {
-      return !this.tab.openerTabId;
-    } else {
-      return false;
-    }
-    // return !this.parent;
-  }
-
-  isSibling(compare: Node): boolean {
-    return this.parent.children.get(compare.id) !== null;
-  }
-
-
+  /** Get level of indentation required for tab. **/
   depth(): number {
     return this.traverseUp();
   }
 
+  /** Get tabs Window object **/
   getWindow(): Window {
     let windowId = this.tab.windowId;
     let window = windowContainer.getById(windowId);
@@ -94,6 +75,7 @@ export default class Node implements IRawParams {
     return window;
   }
 
+  /** Set parent for tab **/
   parentTo(parent: Node) {
     // already had parent -> remove from child list
     if (this.parent) {
@@ -107,53 +89,29 @@ export default class Node implements IRawParams {
     this.parent = parent;
   }
 
+  /** Call function for each children and grandchildren of Tab **/
   applyChildren(callback: NodeCallback) {
-    /*
-    let count = this.values.length;
-
-    this.values.forEach( (childNode: Node) => {
-      callback(childNode);
-      return childNode.children.applyRecursive(callback);
-    });
-    */
-
     this.children.tabs.forEach( (node:Node, key:number) => {
       callback(node);
       return node.applyChildren(callback);
     });
-
   }
 
+  /** Remove tab and parent it's children to own parent **/
   remove() {
     // reparent own children to own parent and redraw
-
     this.applyChildren((child:Node) => {
-      child.parentTo(this.parent);
-      child.update();
-    });
-    /*
-    this.children.applyRecursive((child: Node) => {
-
-      if (child.parent && child.parent.id === this.id) {
+      if (child.parent.id === this.id) {
         child.parentTo(this.parent);
-        console.log(child.id, 'parented to ', (this.parent) ? this.parent.id : 'root');
-      } else {
-        console.error('Misparented', child);
       }
-
-      console.log(child.id, 'depth', child.depth());
-      console.log(child.id, 'parent', child.parent);
-      child.update();
+      child.renderIndentation();
     });
-    */
 
-    this.parent.children.remove(this);
-    // tabContainer.remove(this);
+    this.parent.children.remove(this); // remove from parent's children
   }
 
-  update() {
+  renderIndentation() {
     let depth = this.depth();
-    console.log('Update ' + this + ' depth ' + depth);
     chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli',
       {
         'command': 'IndentTab',
@@ -163,5 +121,3 @@ export default class Node implements IRawParams {
   }
 
 }
-
-export let rootNode:Node = new Node();
