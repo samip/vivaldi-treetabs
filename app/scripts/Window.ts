@@ -3,7 +3,7 @@ import Node from './Node';
 export default class Window {
 
   id: number;
-  window: chrome.windows.Window;
+  window: chrome.windows.Window; // https://developers.chrome.com/extensions/windows
   root: Node;
 
   constructor(window:chrome.windows.Window) {

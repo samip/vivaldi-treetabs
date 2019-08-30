@@ -5,12 +5,11 @@ import {windowContainer} from './WindowContainer';
 
 export type NodeCallback = (node: Node) => any;
 
-interface IRawParams {
-    [id: string]: any;
-}
+/*
+Represents either tab or Window's root node
+*/
 
-export default class Node implements IRawParams {
-  [k: string]: any;
+export default class Node {
 
   /*
   The ID of the tab. Tab IDs are unique within a browser session.
@@ -18,39 +17,42 @@ export default class Node implements IRawParams {
   in which case a session ID may be present. Tab ID can also be set to chrome.tabs.TAB_ID_NONE for apps and devtools windows.
    */
   id: number;
+  tab: chrome.tabs.Tab; // https://developer.chrome.com/extensions/tabs
   children: TabContainer;
-  tab: chrome.tabs.Tab;
   parent: Node;
   waitingForRepositioning: boolean;
-  initialIndex: number;
+  initialIndex: number; // Index (from top to bottom) of tab when it was created
+  isRoot: boolean;
 
   constructor(tab?: chrome.tabs.Tab) {
-    if (!tab) {
-      this.id = 0;
-    } else {
+    if (tab) {
       if (tab.id) {
         this.id = tab.id;
       } else {
         // should never happen
         throw new Error('No tab id');
       }
-
       this.tab = tab;
+    } else {
+      this.isRoot = true;
+      this.id = 0;
     }
+
     this.children = new TabContainer();
     this.waitingForRepositioning = false;
   }
 
-  traverseUp() {
-    let helper = function(i:any, c:any): any {
-      if (i.parent) {
-        if (i.parent.id === 0) {
-          return helper(i.parent, c);
+
+  calculateDistanceToRoot() {
+    let helper = function(node:Node, distance:number): any {
+      if (node.parent) {
+        if (node.parent.isRoot) {
+          return helper(node.parent, distance);
         } else {
-          return helper(i.parent, ++c);
+          return helper(node.parent, ++distance);
         }
       } else {
-        return c;
+        return distance;
       }
     };
 
@@ -60,20 +62,20 @@ export default class Node implements IRawParams {
   /** Send tab specific command to Browserhook **/
   command(command: string, parameters:any={}) {
     parameters['tabId'] = this.id;
-    let obj = new Command(command, parameters);
-    obj.send();
-    return obj;
+    let cmd = new Command(command, parameters);
+    cmd.send();
+    return cmd;
   }
 
   /** Get level of indentation required for tab. **/
   depth(): number {
-    return this.traverseUp();
+    return this.calculateDistanceToRoot();
   }
 
   /** Get tab's Window object **/
   getWindow(): Window {
     let windowId = this.tab.windowId;
-    let window = windowContainer.getById(windowId);
+    let window = windowContainer.get(windowId);
     if (!window) {
       throw new Error('Window not in container');
     }
@@ -82,20 +84,20 @@ export default class Node implements IRawParams {
 
   /** Set parent **/
   parentTo(parent: Node) {
-    // already had parent -> remove from child list
+    /*
     if (this.parent) {
-      /*
-      Tämä kai rikkoo reparentin kun koko child node poistetaan?
       this.parent.children.remove(this);
-       */
     }
-    // add to new parent's child list
+    */
+
+    // add node to new parent's child list
     parent.children.add(this);
     this.parent = parent;
+    // has children now -> show close children button
     parent.command('showCloseChildrenButton');
   }
 
-  /** Call function for each children and grandchildren of Tab **/
+  /** Call function on every child and grandchild of Node **/
   applyChildren(callback: NodeCallback) {
     this.children.tabs.forEach( (node:Node, key:number) => {
       callback(node);
@@ -105,7 +107,7 @@ export default class Node implements IRawParams {
 
   /** Remove tab and parent it's children to own parent **/
   remove() {
-    // reparent own children to own parent and redraw
+    // parent removed tab's children to own parent and redraw
     this.applyChildren((child:Node) => {
       if (child.parent.id === this.id) {
         child.parentTo(this.parent);
@@ -114,6 +116,8 @@ export default class Node implements IRawParams {
     });
 
     this.parent.children.remove(this); // remove from parent's children
+
+    // only child was removed -> hide close children button
     if (this.parent.children.isEmpty()) {
       this.parent.command('hideCloseChildrenButton');
     }

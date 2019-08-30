@@ -1,5 +1,9 @@
 import Window from './Window';
 
+/*
+Indexes windows by their ids
+ */
+
 class WindowContainer {
 
   windows: Map<number,Window>;
@@ -13,14 +17,10 @@ class WindowContainer {
     this.windows.set(key, window);
   }
 
-  getAll() {
-    return this.windows;
-  }
-
-  getById(id:number): Window {
+  get(id:number): Window {
     let window = this.windows.get(id);
     if (!window) {
-      throw new Error('WindowContainer: access to missing ' + id);
+      throw new Error('WindowContainer: access to missing element. id:  ' + id);
     }
     return window;
   }
@@ -33,7 +33,6 @@ class WindowContainer {
     windows.forEach((window:chrome.windows.Window) => {
       let winObj = new Window(window);
       this.add(winObj);
-      this.windows.set(winObj.id, winObj);
     });
   }
 
