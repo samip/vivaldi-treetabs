@@ -21,12 +21,20 @@ export class TabContainer {
     return node;
   }
 
+  getFirst(): Node {
+    return this.tabs.values().next().value;
+  }
+
   remove(node:Node) {
     let key = node.id;
     if (!this.tabs.has(key)) {
       throw new Error('Invalid node access on TabContainer.remove()' + key);
     }
     this.tabs.delete(key);
+  }
+
+  isEmpty(): boolean {
+    return this.tabs.size === 0;
   }
 
   initFromArray(tabs:chrome.tabs.Tab[]) {

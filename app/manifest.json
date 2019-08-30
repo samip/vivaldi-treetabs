@@ -12,7 +12,8 @@
     "128": "images/icon-128.png"
   },
   "externally_connectable" : {
-    "matches": [ "http://localhost/*" ]
+    "matches": [ "http://localhost/*" ],
+    "ids": [ "mpognobbkildjkofajifpdfhcoklimli" ]
   },
   "background": {
     "scripts": [

@@ -11,6 +11,12 @@ interface IRawParams {
 
 export default class Node implements IRawParams {
   [k: string]: any;
+
+  /*
+  The ID of the tab. Tab IDs are unique within a browser session.
+  Under some circumstances a tab may not be assigned an ID; for example, when querying foreign tabs using the sessions API,
+  in which case a session ID may be present. Tab ID can also be set to chrome.tabs.TAB_ID_NONE for apps and devtools windows.
+   */
   id: number;
   children: TabContainer;
   tab: chrome.tabs.Tab;
@@ -20,7 +26,6 @@ export default class Node implements IRawParams {
 
   constructor(tab?: chrome.tabs.Tab) {
     if (!tab) {
-      console.log('created root');
       this.id = 0;
     } else {
       if (tab.id) {
@@ -29,9 +34,9 @@ export default class Node implements IRawParams {
         // should never happen
         throw new Error('No tab id');
       }
+
       this.tab = tab;
     }
-
     this.children = new TabContainer();
     this.waitingForRepositioning = false;
   }
@@ -52,7 +57,7 @@ export default class Node implements IRawParams {
     return helper(this, 0);
   }
 
-  /** Send tab specific command to vivaldiTabsBrowserHook.js **/
+  /** Send tab specific command to Browserhook **/
   command(command: string, parameters:any={}) {
     parameters['tabId'] = this.id;
     let obj = new Command(command, parameters);
@@ -65,7 +70,7 @@ export default class Node implements IRawParams {
     return this.traverseUp();
   }
 
-  /** Get tabs Window object **/
+  /** Get tab's Window object **/
   getWindow(): Window {
     let windowId = this.tab.windowId;
     let window = windowContainer.getById(windowId);
@@ -75,7 +80,7 @@ export default class Node implements IRawParams {
     return window;
   }
 
-  /** Set parent for tab **/
+  /** Set parent **/
   parentTo(parent: Node) {
     // already had parent -> remove from child list
     if (this.parent) {
@@ -87,6 +92,7 @@ export default class Node implements IRawParams {
     // add to new parent's child list
     parent.children.add(this);
     this.parent = parent;
+    parent.command('showCloseChildrenButton');
   }
 
   /** Call function for each children and grandchildren of Tab **/
@@ -108,16 +114,15 @@ export default class Node implements IRawParams {
     });
 
     this.parent.children.remove(this); // remove from parent's children
+    if (this.parent.children.isEmpty()) {
+      this.parent.command('hideCloseChildrenButton');
+    }
   }
 
+  /*** Send IndentTab command to BrowserHook ***/
   renderIndentation() {
     let depth = this.depth();
-    chrome.runtime.sendMessage('mpognobbkildjkofajifpdfhcoklimli',
-      {
-        'command': 'IndentTab',
-        'tabId': this.id,
-        'indentLevel': depth
-      });
+    this.command('IndentTab', {'indentLevel' :depth});
   }
 
 }

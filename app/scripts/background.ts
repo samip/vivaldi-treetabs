@@ -5,6 +5,7 @@ import Window from './Window';
 import {tabContainer} from './TabContainer';
 import WindowEventFilter = chrome.windows.WindowEventFilter;
 
+
 class ChromeCallbacks {
 
   static onMessageExternal(request:any, sender:any, sendResponse:any) {
@@ -26,17 +27,28 @@ class ChromeCallbacks {
             node.command('ShowId');
           });
           break;
-        case 'element':
-          let first = tabContainer.tabs.values().next().value;
-          let ret = first.command('getElement');
-          console.log('test', ret);
-          break;
         case 'store':
+          break;
+        case 'CloseChildren':
+          console.log('Close children called from browser.html for tab-id: ' + request.tab);
+          const tabId = request.tabId;
+          const node = tabContainer.get(tabId);
+
+          if (node) {
+            node.applyChildren((child:Node) => {
+              chrome.tabs.remove(child.id);
+            });
+          } else {
+            console.error('Trying to close children of missing tab');
+          }
           break;
       }
     }
   }
 
+  /*
+  Chrome extension shortcuts (not working)
+   */
   static onCommand(command:any) {
     let log = (message:string) => {
      let enabled = true;
@@ -66,7 +78,6 @@ class ChromeCallbacks {
       if (parentNode) {
         node.parentTo(parentNode);
       } else {
-        console.log(parentNode, tabContainer.tabs, tab.openerTabId);
         throw new Error('Parent not in container'); // todo: handle better
       }
 
@@ -74,6 +85,8 @@ class ChromeCallbacks {
       node.parentTo(parentTab);
       // node.command('IndentTab', {tabId: tab.id, indentLevel: node.depth()});
       node.renderIndentation();
+
+
       console.log('Child tab', node, 'parented to', parentTab);
     }
     // top level tab -> parent to window's root node
@@ -145,7 +158,7 @@ class ChromeCallbacks {
     node.renderIndentation();
   }
 
-  ///
+
   static onTabDetached(tabId:number, info:chrome.tabs.TabDetachInfo) {
     let node = tabContainer.get(tabId);
     node.children.tabs.forEach((child: Node, key: number) => {
