@@ -1,62 +1,20 @@
 /*
-Receive message from extension.
-
-Commands:
-
-  IndentTab:
-    tabId,
-    indentLevel
-
-  SetIndentStyle:
-    indentValue: int
-    indentAttribute: marginLeft, marginRight etc
-    indentUnit: px, %, em
+Extension of Vivaldi Tabs extension.
 */
 
-var eventQueue = new Map();
+chrome.runtime.onMessageExternal.addListener(
+  function (request, sender, sendResponse) {
+    console.log('external in browser.html', request, sender)
 
-let observer = new MutationObserver(function(mutations) {
-  console.log(mutations);
-  mutations.forEach((mutation) => {
-    if (mutation.type === 'childList') {
-    mutation.addedNodes.forEach((node) => {
-      let tab = node.querySelector('.tab');
-      let tab_id = tab.id.split('-')[1];
-      console.log('created', tab_id);
-      const requestForTab = eventQueue[tab_id];
-      if (requestForTab) {
-        console.log('queue', requestForTab);
-        handleCommand(requestForTab, (s) => console.log('mutilated'));
-      } else {
-        console.log('no queue');
-      }
-    });
-    }
-  });
-});
+    var tabcontrol = new TabControl()
 
-function initObserver() {
-  let tabStrip = document.getElementsByClassName('tab-strip')[0];
-  if (!tabStrip) {
-    setTimeout(() => {
-          initObserver();
-        }, 50);
-    return;
-  }
+    switch (request.command) {
+      /*
+      Indents tab
 
-  observer.observe(document.getElementsByClassName('tab-strip')[0], {
-    attributes: false,
-    childList: true,
-    characterData: false
-  });
-
-}
-
-initObserver();
-
-function handleCommand(request, sendResponse) {
-  var tabcontrol = new TabControl();
-  switch (request.command) {
+      @param tabId
+      @param indentLevel - how many steps tab needs to be indented. One step is by default 20 px
+       */
       case 'IndentTab':
         if (typeof request.tabId === 'undefined' || typeof request.indentLevel === 'undefined') {
           console.log('Undefined tabId or indentLevel')
@@ -64,27 +22,40 @@ function handleCommand(request, sendResponse) {
           tabcontrol.IndentTab(request.tabId, request.indentLevel)
         }
         break;
-      case 'SetIndentStyle':
-        tabcontrol.SetIndentStyle()
-        break;
+
+      /*
+       * Show tab's id next to it's title. Used in debugging only.
+       *
+       * @param tabId
+       */
       case 'ShowId':
         if (request.tabId) {
           tabcontrol.ShowId(request.tabId, request.indentLevel);
         }
         break;
-      case 'SetText':
-        tabcontrol.SetText(request.tabId, request.text);
-        break;
+
+      /* Append attribute to tab strip. Used in debugging only.
+       *
+       */
       case 'appendAttribute':
         // UNSAFE
         tabcontrol.appendAttribute(request.tabId, request.attribute, request.value)
         break;
+
+      /* Show or create 'Close child tabs' button in tab strip
+       * @param TabId
+       */
       case 'showCloseChildrenButton':
         tabcontrol.showCloseChildrenButton(request.tabId);
         break;
+
+      /* Hide 'Close child tabs' button in tab strip
+       * @param TabId
+       */
       case 'hideCloseChildrenButton':
         tabcontrol.hideCloseChildrenButton(request.tabId);
         break;
+
       default:
         console.log('Invalid command');
         return sendResponse('Invalid command: ' + request.command);
@@ -92,25 +63,6 @@ function handleCommand(request, sendResponse) {
     }
 
     sendResponse(request.command + ' executed');
-}
-
-chrome.runtime.onMessageExternal.addListener(
-  function (request, sender, sendResponse) {
-    console.log('external in browser.html', request, sender)
-
-    var tabcontrol = new TabControl();
-    handleCommand(request, sendResponse);
-    sendResponse({});
-    return;
-
-    if (request.tabId) {
-      const strip = tabcontrol.getElement(request.tabId);
-      if (!strip) {
-        eventQueue[request.tabId] = request;
-        return;
-      }
-    }
-    handleCommand(request, sendResponse);
   }
 )
 
@@ -137,7 +89,6 @@ example tab strip html:
 
 */
 
-
 class TabControl {
 
   constructor () {
@@ -146,29 +97,19 @@ class TabControl {
     this.indentAttribute = 'marginLeft';
   }
 
-  async IndentTab (tabId, indentLevel) {
-    /*
-    this.getTabElement(tabId, 1)
-    .then( (element) => {
-      console.log(element);
-      let indentVal = (indentLevel * this.indentStep) + this.indentUnit;
-      console.log(indentLevel + '*' + this.indentStep + '+' + this.indentUnit + '=' + indentVal);
-      element.style[this.indentAttribute] = indentVal;
-    })
-    .catch(error => {
-      console.error('promise error' + error);
-    });
-    */
+  IndentTab (tabId, indentLevel, pass) {
+    pass = pass || 0
 
-    try {
-      let element = await this.getTabElement(tabId, 500);
-      let indentVal = (indentLevel * this.indentStep) + this.indentUnit;
-      console.log(indentLevel + '*' + this.indentStep + '+' + this.indentUnit + '=' + indentVal);
-      element.style[this.indentAttribute] = indentVal;
-    } catch(error) {
-      console.error('promise error' + error);
+    let element = this.getElement(tabId);
+    if (!element) {
+      setTimeout(() => {
+        this.IndentTab(tabId, indentLevel, pass++)
+      }, 50)
     }
 
+    let indentVal = (indentLevel * this.indentStep) + this.indentUnit;
+    console.log(indentLevel + '*' + this.indentStep + '+' + this.indentUnit + '=' + indentVal + '  pass:' + pass);
+    element.style[this.indentAttribute] = indentVal;
   }
 
   SetIndentStyle () {
@@ -207,14 +148,12 @@ class TabControl {
 
   showCollapseChildrenButton (tabId) {
     /*
-    This is next to impossible to implement since tabs have relative top coordinates
-    */
+     * This is next to impossible to implement since tabs have relative top coordinates calculated by Vivaldi.
+     */
   }
-
 
   showCloseChildrenButton (tabId) {
     let element = this.getElement(tabId);
-
     if (!element) {
       // keep looking, fixme
       setTimeout(() => {
@@ -224,9 +163,8 @@ class TabControl {
 
     let buttonClass = TabControl.getCloseChildrenButtonClassname();
     let closeButton = element.querySelector('.close');
-    let alreadyCreated = closeButton.previousSibling.classList.contains(buttonClass);
     let existingButton = element.querySelector('.' + buttonClass);
-    console.log(existingButton);
+
     if (existingButton) {
       existingButton.style.visibility = 'initial';
     } else {
@@ -253,7 +191,7 @@ class TabControl {
     return 'close-children';
   }
 
-  /// icon for close children button
+  /// icon for close children button. Vivaldi's close tab icon + three circles
   static getCloseChildrenButtonSVG() {
     return `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
             <path d="M13.5 6l-1.4-1.4-3.1 3-3.1-3L4.5 6l3.1 3.1-3 2.9 1.5 1.4L9 10.5l2.9 2.9 1.5-1.4-3-2.9"></path>
@@ -275,52 +213,7 @@ class TabControl {
   getElement (tabId) {
     return document.getElementById('tab-' + tabId)
   }
-
-  async getTabElement(tabId, rejectTime) {
-    // return new Promise((resolve, reject) => {
-      var hasChanged = false;
-
-      let observer = new MutationObserver(function(mutations) {
-        mutations.forEach((mutation) => {
-          if (mutation.type === 'childList') {
-            mutation.addedNodes.forEach((node) => {
-              let tab = node.querySelector('.tab');
-              let tab_id = tab.id.split('-')[1];
-              if (tab_id == tabId) {
-                hasChanged = true;
-                return tab;
-                resolve(tab);
-              }
-            });
-        }
-        });
-      }); // observer
-
-      if (rejectTime > 0) {
-        window.setTimeout(()=> {
-          if (!hasChanged) {
-            throw new Error(tabId + ' not found in ' + rejectTime);
-          }
-        }, rejectTime * 100);
-      }
-
-      const target = document.getElementsByClassName('tab-strip')[0];
-
-      observer.observe(target, {
-        attributes: false,
-        childList: true,
-        characterData: false
-      });
-
-    // });
-    // promise
-  }
-
-  async
-
-
 }
-
 
 // TODO: https://developer.chrome.com/extensions/messaging check long live connections
 class ExtensionBridge {
@@ -332,7 +225,7 @@ class ExtensionBridge {
       this.id = 'pifflcjhdpciekonjecjkmpabmpfgddm'; // TOOD: get from chrome.runtime.onMessageExternal sender parameter
     }
   }
-
+  /// Send message back to extension
   sendMessage(message, responseCallback) {
     chrome.runtime.sendMessage(this.id, message, {}, function(response) {
       if (typeof responseCallback === 'function') {
@@ -342,9 +235,7 @@ class ExtensionBridge {
   }
 }
 
-/*
-Close Children clicked
-*/
+/// "Close Children" button clicked. Send close children command to the extension
 function onClickedCloseChildren(event, tabId) {
   // send Close Children signal to extension
   let cmdObj = { command: 'CloseChildren', tabId: tabId  };
