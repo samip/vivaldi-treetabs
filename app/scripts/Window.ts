@@ -9,7 +9,7 @@ export default class Window {
   constructor(window:chrome.windows.Window) {
     this.id = window.id;
     this.window = window;
-    this.root = new Node();
+    this.root = new Node(); // Every tab in window is descendant of this
   }
 
 }

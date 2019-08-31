@@ -11,16 +11,10 @@ Represents either tab or Window's root node
 
 export default class Node {
 
-  /*
-  The ID of the tab. Tab IDs are unique within a browser session.
-  Under some circumstances a tab may not be assigned an ID; for example, when querying foreign tabs using the sessions API,
-  in which case a session ID may be present. Tab ID can also be set to chrome.tabs.TAB_ID_NONE for apps and devtools windows.
-   */
   id: number;
   tab: chrome.tabs.Tab; // https://developer.chrome.com/extensions/tabs
   children: TabContainer;
   parent: Node;
-  waitingForRepositioning: boolean;
   initialIndex: number; // Index (from top to bottom) of tab when it was created
   isRoot: boolean;
 
@@ -29,7 +23,9 @@ export default class Node {
       if (tab.id) {
         this.id = tab.id;
       } else {
-        // should never happen
+        // "Under some circumstances a tab may not be assigned an ID; for example,
+        // when querying foreign tabs using the sessions API"
+        // should never happen here
         throw new Error('No tab id');
       }
       this.tab = tab;
@@ -39,11 +35,19 @@ export default class Node {
     }
 
     this.children = new TabContainer();
-    this.waitingForRepositioning = false;
   }
 
 
-  calculateDistanceToRoot() {
+  /** Call function on every descendant of Node **/
+  applyDescendants(callback: NodeCallback): void {
+    this.children.tabs.forEach( (node:Node, key:number) => {
+      callback(node);
+      return node.applyDescendants(callback);
+    });
+  }
+
+  /*** Traverse to root, return distance  ***/
+  calculateDistanceToRoot(): number {
     let helper = function(node:Node, distance:number): any {
       if (node.parent) {
         if (node.parent.isRoot) {
@@ -60,58 +64,48 @@ export default class Node {
   }
 
   /** Send tab specific command to Browserhook **/
-  command(command: string, parameters:any={}) {
+  command(command: string, parameters:any={}): void {
     parameters['tabId'] = this.id;
-    let cmd = new Command(command, parameters);
+    const cmd = new Command(command, parameters);
     cmd.send();
-    return cmd;
   }
 
-  /** Get level of indentation required for tab. **/
+  /** Get level of indentation required for tab **/
   depth(): number {
     return this.calculateDistanceToRoot();
   }
 
   /** Get tab's Window object **/
   getWindow(): Window {
-    let windowId = this.tab.windowId;
-    let window = windowContainer.get(windowId);
-    if (!window) {
-      throw new Error('Window not in container');
-    }
-    return window;
+    const windowId = this.tab.windowId;
+    return windowContainer.get(windowId);
   }
 
   /** Set parent **/
-  parentTo(parent: Node) {
+  parentTo(parent: Node): void {
     /*
     if (this.parent) {
       this.parent.children.remove(this);
     }
     */
 
-    // add node to new parent's child list
+    // Add node to new parent's child list
     parent.children.add(this);
     this.parent = parent;
-    // has children now -> show close children button
+    // Has children now -> show close children button
     parent.command('showCloseChildrenButton');
   }
 
-  /** Call function on every child and grandchild of Node **/
-  applyChildren(callback: NodeCallback) {
-    this.children.tabs.forEach( (node:Node, key:number) => {
-      callback(node);
-      return node.applyChildren(callback);
-    });
-  }
 
   /** Remove tab and parent it's children to own parent **/
-  remove() {
-    // parent removed tab's children to own parent and redraw
-    this.applyChildren((child:Node) => {
+  remove(): void {
+    // Parent removed tab's children to own parent and redraw
+    this.applyDescendants((child:Node) => {
+      // Reparent direct children
       if (child.parent.id === this.id) {
         child.parentTo(this.parent);
       }
+      // Re-render all descendants since their indentation has changed, while parent stayed the same.
       child.renderIndentation();
     });
 
@@ -124,9 +118,9 @@ export default class Node {
   }
 
   /*** Send IndentTab command to BrowserHook ***/
-  renderIndentation() {
-    let depth = this.depth();
-    this.command('IndentTab', {'indentLevel' :depth});
+  renderIndentation(): void {
+    const depth = this.depth();
+    this.command('IndentTab', {'indentLevel': depth});
   }
 
 }

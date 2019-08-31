@@ -1,123 +1,56 @@
 import 'chromereload/devonly';
 import Node from './Node';
+import {tabContainer} from './TabContainer';
 import {windowContainer} from './WindowContainer';
 import Window from './Window';
-import {tabContainer} from './TabContainer';
-import WindowEventFilter = chrome.windows.WindowEventFilter;
-
 
 class ChromeCallbacks {
 
-  static onMessageExternal(request:any, sender:any, sendResponse:any) {
-    console.log('external received in background', request, sender);
-
-    if (request.command) {
-      switch (request.command) {
-        case 'build':
-          // async. wrap in promises?
-          chrome.windows.getAll(windowContainer.initFromArray.bind(windowContainer));
-          chrome.tabs.query({}, tabContainer.initFromArray.bind(tabContainer));
-          sendResponse({'tabContainer': tabContainer, 'windowContainer': windowContainer});
-          break;
-        case 'get':
-          sendResponse({'tabContainer': tabContainer});
-          break;
-        case 'show_ids':
-          tabContainer.tabs.forEach((node:Node) => {
-            node.command('ShowId');
-          });
-          break;
-        case 'store':
-          break;
-        case 'CloseChildren':
-          console.log('Close children called from browser.html for tab-id: ' + request.tab);
-          const tabId = request.tabId;
-          const node = tabContainer.get(tabId);
-
-          if (node) {
-            node.applyChildren((child:Node) => {
-              chrome.tabs.remove(child.id);
-            });
-          } else {
-            console.error('Trying to close children of missing tab');
-          }
-          break;
-      }
-    }
-  }
-
-  /*
-  Chrome extension shortcuts (not working)
-   */
-  static onCommand(command:any) {
-    let log = (message:string) => {
-     let enabled = true;
-     if (enabled) {
-       console.log(message);
-     }
-    };
-    log('Received command:' + command);
-    switch (command) {
-      case 'close-child-tabs':
-        log('Close child tabs');
-        console.log('Close child tabs shortcut');
-        break;
-      default:
-        console.error('Unknown command');
-        break;
-    }
-  }
-
   static onTabCreated(tab: chrome.tabs.Tab) {
-    let node = new Node(tab);
+    const node = new Node(tab);
     tabContainer.add(node);
 
-    // child tab created. set it's parent tab and indent it.
+    // child tab created -> set parent and indent.
     if (tab.openerTabId) {
-      let parentNode = tabContainer.get(tab.openerTabId);
-      if (parentNode) {
-        node.parentTo(parentNode);
-      } else {
-        throw new Error('Parent not in container'); // todo: handle better
+      const parentTab = tabContainer.get(tab.openerTabId);
+      if (!parentTab) {
+        // todo: query
       }
 
-      let parentTab = tabContainer.get(tab.openerTabId);
       node.parentTo(parentTab);
-      // node.command('IndentTab', {tabId: tab.id, indentLevel: node.depth()});
       node.renderIndentation();
-
-
-      console.log('Child tab', node, 'parented to', parentTab);
+      console.info('Child tab', node, 'parented to', parentTab);
     }
     // top level tab -> parent to window's root node
     else {
-      let root = node.getWindow().root;
+      const root = node.getWindow().root;
       node.parentTo(root);
       node.initialIndex = tab.index;
-      node.waitingForRepositioning = true;
-      console.log('Root tab ', node, ' parented to ', root);
+      console.info('Root tab ', node, ' parented to ', root);
     }
   }
 
   static onTabMoved(tabId:number, moveInfo:chrome.tabs.TabMoveInfo) {
-    let node:Node = tabContainer.get(tabId);
-    let root:Node = node.getWindow().root;
-    const correctEvent = node.initialIndex === moveInfo.fromIndex; // whether this was final move event
+    const node:Node = tabContainer.get(tabId);
+    const root:Node = node.getWindow().root;
 
-    if (node.waitingForRepositioning && correctEvent) {
-      let searchBelow = moveInfo.toIndex; // search for spot below created tab
+    // whether this was final move event made by Vivaldi
+    const correctEvent = node.initialIndex === moveInfo.fromIndex;
+
+    /// top level tab needs to repositioned outside existing branches
+    if (node.parent.isRoot && correctEvent) {
+      const searchBelow = moveInfo.toIndex; // search for spot below created tab
       let processed = 0;
       let minIndex:number;
 
-      // TODO(?): keep track of tab index to avoid api call
+      // This lags sometimes.
+      // TODO: keep track of tab order to avoid api call?
       chrome.tabs.get(tabId, (tab:chrome.tabs.Tab) => {
         root.children.tabs.forEach((item) => {
+          // get current index
           chrome.tabs.get(item.id, (tab:chrome.tabs.Tab) => {
-            if (tab.openerTabId) {
-              console.error('Root not root', tab);
-            }
-            tabContainer.get(item.id).command('appendAttribute', {attribute:'style', values: 'background-color:red'});
             let prev = --tab.index;
+
             if (prev > searchBelow) {
               if (!minIndex || prev <= minIndex) {
                 minIndex = prev;
@@ -153,12 +86,14 @@ class ChromeCallbacks {
    */
   static onTabAttached(tabId:number, info:chrome.tabs.TabAttachInfo) {
     let node = tabContainer.get(tabId);
-    let newWindow = windowContainer.getById(info.newWindowId);
+    let newWindow = windowContainer.get(info.newWindowId);
     node.parentTo(newWindow.root);
     node.renderIndentation();
   }
 
-
+  /*
+  TODO: move children to new window with their parent?
+   */
   static onTabDetached(tabId:number, info:chrome.tabs.TabDetachInfo) {
     let node = tabContainer.get(tabId);
     node.children.tabs.forEach((child: Node, key: number) => {
@@ -172,18 +107,76 @@ class ChromeCallbacks {
     windowContainer.add(winObj);
   }
 
-  static onWindowRemoved(windowId:number, filters:WindowEventFilter|undefined) {
-    let winObj = windowContainer.getById(windowId);
+  static onWindowRemoved(windowId:number, filters:chrome.windows.WindowEventFilter|undefined) {
+    let winObj = windowContainer.get(windowId);
     windowContainer.remove(winObj);
   }
 
+  /*
+  Handle messages send from external sources set in manifest.json.
+  Current allowed sources: BrowserHook and testpage.html
+   */
 
+  static onMessageExternal(request:any, sender:any, sendResponse:any) {
+    console.log('external received in background', request, sender);
+
+    if (request.command) {
+      switch (request.command) {
+        case 'build':
+          // async. wrap in promises?
+          chrome.windows.getAll(windowContainer.initFromArray.bind(windowContainer));
+          chrome.tabs.query({}, tabContainer.initFromArray.bind(tabContainer));
+          sendResponse({'tabContainer': tabContainer, 'windowContainer': windowContainer});
+          break;
+        case 'get':
+          sendResponse({'tabContainer': tabContainer});
+          break;
+        case 'show_ids':
+          tabContainer.tabs.forEach((node:Node) => {
+            node.command('ShowId');
+          });
+          break;
+        case 'store':
+          break;
+        case 'CloseChildren':
+          console.info('Close children called from browser.html for tab-id: ' + request.tab);
+          const tabId = request.tabId;
+          const node = tabContainer.get(tabId);
+
+          if (node) {
+            node.applyDescendants((child:Node) => {
+              chrome.tabs.remove(child.id);
+            });
+          } else {
+            console.error('Trying to close children of missing tab');
+          }
+          break;
+      }
+    }
+  }
+
+  /*
+  Chrome extension shortcuts (not working)
+   */
+  static onCommand(command:any) {
+    console.log('Received command:' + command);
+    switch (command) {
+      case 'close-child-tabs':
+        console.log('Close child tabs shortcut');
+        break;
+      default:
+        console.error('Unknown command');
+        break;
+    }
+  }
 } // end of ChromeCallBacks
 
 
-
+// Initialize tab and window containers
 chrome.windows.getAll(windowContainer.initFromArray.bind(windowContainer));
 chrome.tabs.query({}, tabContainer.initFromArray.bind(tabContainer));
+
+
 chrome.runtime.onMessageExternal.addListener(ChromeCallbacks.onMessageExternal);
 chrome.commands.onCommand.addListener(ChromeCallbacks.onCommand);
 chrome.tabs.onCreated.addListener(ChromeCallbacks.onTabCreated);

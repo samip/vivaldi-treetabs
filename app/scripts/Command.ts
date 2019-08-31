@@ -10,23 +10,30 @@ export default class Command {
 
   constructor(command:string, parameters:object) {
     this.command = command;
-    this.browserExtensionId = 'mpognobbkildjkofajifpdfhcoklimli';
+    this.browserExtensionId = 'mpognobbkildjkofajifpdfhcoklimli'; // browser.html
     this.parameters = parameters;
     this.logEnabled = true;
   }
 
-  send() {
+  send(callback?:ResponseCallback) {
     let logEnabled = this.logEnabled;
-    if (logEnabled) {
-      console.log(this.browserExtensionId, this.command, this.parameters);
-    }
     let parameters = {...this.parameters, ...{command:this.command}};
-    console.log(parameters, this.parameters, this.command);
+
+     if (logEnabled) {
+      console.info('Sending command to extension :' + this.browserExtensionId);
+      console.table(parameters);
+    }
+
     chrome.runtime.sendMessage(this.browserExtensionId, parameters, {}, function(response:any) {
       if (logEnabled) {
-        console.log('Response from command:', response);
+        console.info('Response from command:', response);
+        if (callback) {
+          callback(response);
+        }
       }
     });
   }
 
 }
+
+export type ResponseCallback = (response: any) => any;

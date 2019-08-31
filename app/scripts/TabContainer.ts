@@ -9,8 +9,7 @@ export class TabContainer {
   }
 
   add(node:Node): void {
-    let key = node.id;
-    this.tabs.set(key, node);
+    this.tabs.set(node.id, node);
   }
 
   get(id:number): Node {
@@ -26,60 +25,59 @@ export class TabContainer {
   }
 
   remove(node:Node) {
-    let key = node.id;
-    if (!this.tabs.has(key)) {
-      throw new Error('Invalid node access on TabContainer.remove()' + key);
+    if (this.tabs.get(node.id)) {
+      this.tabs.delete(node.id);
     }
-    this.tabs.delete(key);
   }
 
   isEmpty(): boolean {
     return this.tabs.size === 0;
   }
 
+  /// Create nodes and their relationships
   initFromArray(tabs:chrome.tabs.Tab[]) {
-    let parentQueue = new Map<number, Array<Node>>();
+    const parentQueue = new Map<number, Array<Node>>();
 
     tabs.forEach((tab:chrome.tabs.Tab) => {
-      let tabObj = new Node(tab);
+      const tabObj = new Node(tab);
+
+      // Parent already in container -> set parent normally
       if (tab.openerTabId) {
         let parent = this.get(tab.openerTabId);
-        // parent already in container -> reparent normally
+
         if (parent) {
           tabObj.parentTo(parent);
         }
-        // parent not yet in container -> parent this once parent is created
+
+        // parent not yet in container. Wait for it to be created
         else {
           if (!parentQueue.has(tab.openerTabId)) {
             parentQueue.set(tab.openerTabId, []);
           }
           // should be just parentQueue.get(tab.openerTabId).push(tabObj)
-          let siblingparentQueue = parentQueue.get(tab.openerTabId);
+          const siblingparentQueue = parentQueue.get(tab.openerTabId);
 
           if (siblingparentQueue) {
             siblingparentQueue.push(tabObj);
-          } else {
-            throw new Error('???');
           }
         }
       }
-      // root tab -> parent to own window's root node
+      // Top level tab -> parent to window's root node
       else {
         let window = tabObj.getWindow();
         tabObj.parentTo(window.root);
       }
 
-      let queueForThis = parentQueue.get(tabObj.id);
+      const queueForThis = parentQueue.get(tabObj.id);
       if (queueForThis) {
-        // children were created first -> parent them
+        // Children were created first -> parent them
         queueForThis.forEach((node:Node) => {
           node.parentTo(tabObj);
         });
       }
-
       this.add(tabObj);
     });
   }
 }
 
-export let tabContainer = new TabContainer();
+export let tabContainer = new TabContainer(); // Contains tabs from every window
