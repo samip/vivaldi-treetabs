@@ -1,14 +1,61 @@
 /*
 Extension of Vivaldi Tabs extension.
 */
+var eventQueue = new Map();
 
-chrome.runtime.onMessageExternal.addListener(
-  function (request, sender, sendResponse) {
-    console.log('external in browser.html', request, sender)
+let observer = new MutationObserver(function(mutations) {
+  console.log(mutations);
+  mutations.forEach((mutation) => {
+    if (mutation.type === 'childList') {
+    mutation.addedNodes.forEach((node) => {
+      let tab = node.querySelector('.tab');
+      let tab_id = tab.id.split('-')[1];
+      console.log('created', tab_id);
+      const requestForTab = eventQueue[tab_id];
+      if (requestForTab) {
+        console.log('queue', requestForTab);
+        handleCommand(requestForTab.request, requestForTab.sendResponse);
+        eventQueue.delete(tab_id);
+      } else {
+        console.log('no queue');
+      }
+    });
+    }
+  });
+});
 
-    var tabcontrol = new TabControl()
+
+function initObserver() {
+  let tabStrip = document.getElementsByClassName('tab-strip')[0];
+  if (!tabStrip) {
+    setTimeout(() => {
+          initObserver();
+        }, 50);
+    return;
+  }
+
+  observer.observe(document.getElementsByClassName('tab-strip')[0], {
+    attributes: false,
+    childList: true,
+    characterData: false
+  });
+
+}
+
+initObserver();
+
+function handleCommand(request, sendResponse) {
+    const tabcontrol = new TabControl();
+
+    if (request.tabId) {
+      const strip = tabcontrol.getElement(request.tabId);
+      if (!strip) {
+        return;
+      }
+    }
 
     switch (request.command) {
+
       /*
       Indents tab
 
@@ -63,6 +110,20 @@ chrome.runtime.onMessageExternal.addListener(
     }
 
     sendResponse(request.command + ' executed');
+}
+
+chrome.runtime.onMessageExternal.addListener(function (request, sender, sendResponse) {
+    console.log('external in browser.html', request, sender)
+
+    var tabcontrol = new TabControl()
+    if (request.tabId) {
+      const strip = tabcontrol.getElement(request.tabId);
+      if (!strip) {
+        eventQueue[request.tabId] = {request: request, sendResponse: sendResponse};
+      } else {
+        handleCommand(request, sendResponse);
+      }
+    }
   }
 )
 
@@ -97,16 +158,8 @@ class TabControl {
     this.indentAttribute = 'marginLeft';
   }
 
-  IndentTab (tabId, indentLevel, pass) {
-    pass = pass || 0
-
+  async IndentTab (tabId, indentLevel, pass) {
     let element = this.getElement(tabId);
-    if (!element) {
-      setTimeout(() => {
-        this.IndentTab(tabId, indentLevel, pass++)
-      }, 50)
-    }
-
     let indentVal = (indentLevel * this.indentStep) + this.indentUnit;
     console.log(indentLevel + '*' + this.indentStep + '+' + this.indentUnit + '=' + indentVal + '  pass:' + pass);
     element.style[this.indentAttribute] = indentVal;
@@ -154,17 +207,11 @@ class TabControl {
 
   showCloseChildrenButton (tabId) {
     let element = this.getElement(tabId);
-    if (!element) {
-      // keep looking, fixme
-      setTimeout(() => {
-        showCloseChildrenButton(tabId);
-      }, 50)
-    }
-
     let buttonClass = TabControl.getCloseChildrenButtonClassname();
     let closeButton = element.querySelector('.close');
+    let alreadyCreated = closeButton.previousSibling.classList.contains(buttonClass);
     let existingButton = element.querySelector('.' + buttonClass);
-
+    console.log(existingButton);
     if (existingButton) {
       existingButton.style.visibility = 'initial';
     } else {
@@ -177,7 +224,6 @@ class TabControl {
       closeButton.parentNode.insertBefore(closeChildrenButton, closeButton); // insert closeChildrenButton before the real close button
     }
   }
-
   hideCloseChildrenButton (tabId) {
     let element = this.getElement(tabId);
     let buttonClass = TabControl.getCloseChildrenButtonClassname();
@@ -212,6 +258,12 @@ class TabControl {
 
   getElement (tabId) {
     return document.getElementById('tab-' + tabId)
+  }
+
+  async waitElement(tabId) {
+    while(!document.querySelector("#tab-" + tabId)) {
+      await new Promise(waitElement => setTimeout(waitElement, 500));
+    }
   }
 }
 

@@ -93,7 +93,9 @@ export default class Node {
     parent.children.add(this);
     this.parent = parent;
     // Has children now -> show close children button
-    parent.command('showCloseChildrenButton');
+    if (!parent.isRoot) {
+      parent.command('showCloseChildrenButton');
+    }
   }
 
 
@@ -112,7 +114,7 @@ export default class Node {
     this.parent.children.remove(this); // remove from parent's children
 
     // only child was removed -> hide close children button
-    if (this.parent.children.isEmpty()) {
+    if (!this.parent.isRoot && this.parent.children.isEmpty()) {
       this.parent.command('hideCloseChildrenButton');
     }
   }
