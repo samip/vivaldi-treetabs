@@ -192,9 +192,8 @@ class TabControl {
     let element = this.getElement(tabId);
     let buttonClass = TabControl.getCloseChildrenButtonClassname();
     let closeButton = element.querySelector('.close');
-    let alreadyCreated = closeButton.previousSibling.classList.contains(buttonClass);
     let existingButton = element.querySelector('.' + buttonClass);
-    console.log(existingButton);
+
     if (existingButton) {
       existingButton.style.visibility = 'initial';
     } else {
@@ -207,6 +206,7 @@ class TabControl {
       closeButton.parentNode.insertBefore(closeChildrenButton, closeButton); // insert closeChildrenButton before the real close button
     }
   }
+
   hideCloseChildrenButton (tabId) {
     let element = this.getElement(tabId);
     let buttonClass = TabControl.getCloseChildrenButtonClassname();
@@ -250,25 +250,6 @@ class TabControl {
   }
 }
 
-// TODO: https://developer.chrome.com/extensions/messaging check long live connections
-class ExtensionBridge {
-
-  constructor(id) {
-    if (id) {
-      this.id = id;
-    } else {
-      this.id = 'pifflcjhdpciekonjecjkmpabmpfgddm'; // TOOD: get from chrome.runtime.onMessageExternal sender parameter
-    }
-  }
-  /// Send message back to extension
-  sendMessage(message, responseCallback) {
-    chrome.runtime.sendMessage(this.id, message, {}, function(response) {
-      if (typeof responseCallback === 'function') {
-        responseCallback(response);
-      }
-    });
-  }
-}
 
 chrome.runtime.onConnectExternal.addListener(function(port) {
   console.log('Connected', port);
