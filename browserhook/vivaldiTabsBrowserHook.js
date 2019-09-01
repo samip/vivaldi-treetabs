@@ -192,8 +192,9 @@ class TabControl {
     let element = this.getElement(tabId);
     let buttonClass = TabControl.getCloseChildrenButtonClassname();
     let closeButton = element.querySelector('.close');
+    let alreadyCreated = closeButton.previousSibling.classList.contains(buttonClass);
     let existingButton = element.querySelector('.' + buttonClass);
-
+    console.log(existingButton);
     if (existingButton) {
       existingButton.style.visibility = 'initial';
     } else {
@@ -206,7 +207,6 @@ class TabControl {
       closeButton.parentNode.insertBefore(closeChildrenButton, closeButton); // insert closeChildrenButton before the real close button
     }
   }
-
   hideCloseChildrenButton (tabId) {
     let element = this.getElement(tabId);
     let buttonClass = TabControl.getCloseChildrenButtonClassname();
@@ -251,11 +251,21 @@ class TabControl {
 }
 
 
-chrome.runtime.onConnectExternal.addListener(function(port) {
-  console.log('Connected', port);
+class Messaging {
+  constructor() {
+    this.port = null;
+  }
 
-  port.onMessage.addListener(function(request) {
-    const sendResponse = (response) => { port.postMessage(response) };
+  onConnected(port) {
+    this.port = port;
+    this.port.onMessage.addListener(this.onReceived);
+    console.log('Connected to browserhook', port);
+  }
+
+  onReceived(request) {
+    console.log('onreceived', request);
+    // const sendResponse = (response) => { this.port.postMessage(response) };
+    const sendResponse = (response) => { console.log('Dummy sendResponse', response) };
     const tabcontrol = new TabControl();
 
     if (request.tabId) {
@@ -263,21 +273,34 @@ chrome.runtime.onConnectExternal.addListener(function(port) {
       // Command was sent before element was created -> queue command
       if (!tabElement) {
         eventQueue[request.tabId] = {request: request, sendResponse: sendResponse};
+        console.log('Request queued', request);
         return;
       }
     }
-
+    console.log('Handling: ', request);
     handleCommand(request, sendResponse);
-  });
-});
+  }
 
+  send(msg) {
+    if (this.port) {
+      console.log('sending msg', msg);
+      let a = this.port.postMessage(msg);
+      console.log(a);
+    } else {
+      throw new Error('Connection not established');
+    }
+  }
+}
 
+let messaging = new Messaging();
+chrome.runtime.onConnectExternal.addListener(messaging.onConnected.bind(messaging));
 
 
 /// "Close Children" button clicked. Send close children command to the extension
 function onClickedCloseChildren(event, tabId) {
   // send Close Children signal to extension
   let cmdObj = { command: 'CloseChildren', tabId: tabId  };
-  let bridge = new ExtensionBridge();
-  bridge.sendMessage(cmdObj);
+  messaging.send(cmdObj);
+  // let bridge = new ExtensionBridge();
+  //bridge.sendMessage(cmdObj);
 }

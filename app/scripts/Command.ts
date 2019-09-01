@@ -1,6 +1,8 @@
 /*
-Send command to Browserhook
- */
+Messaging to and from BrowserHook
+*/
+
+import {tabContainer} from './TabContainer';
 
 export default class Command {
   command: string;
@@ -18,6 +20,7 @@ export default class Command {
     if (!this.port) {
       try {
         this.port = this.connect();
+        this.port.onMessage.addListener(this.onReceived);
       } catch(e) {
         throw e;
       }
@@ -49,6 +52,31 @@ export default class Command {
     if (chrome.runtime.lastError) {
       throw new Error('postMessage error: ' + chrome.runtime.lastError);
     }
+  }
+
+
+  onReceived(request:any) {
+    console.log('External message received', request);
+
+    if (!request.command) {
+      console.error('Missing command');
+    }
+
+    switch (request.command) {
+      case 'CloseChildren':
+        const node = tabContainer.get(request.tabId);
+
+        if (node) {
+          node.removeChildren();
+        } else {
+          console.error('Trying to close children of missing tab');
+        }
+        break;
+
+      default:
+        console.error('Unknown command from browserhook', request.command);
+    }
+
   }
 
 }

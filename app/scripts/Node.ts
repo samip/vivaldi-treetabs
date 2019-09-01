@@ -119,6 +119,12 @@ export default class Node {
     }
   }
 
+  removeChildren(): void {
+    this.applyDescendants((child:Node) => {
+      chrome.tabs.remove(child.id);
+    });
+  }
+
   /*** Send IndentTab command to BrowserHook ***/
   renderIndentation(): void {
     const depth = this.depth();
