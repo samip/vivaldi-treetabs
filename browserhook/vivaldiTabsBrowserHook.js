@@ -28,62 +28,66 @@ class CommandQueue {
   constructor() {
     this.queue = new Map();
     this.tabObserver = this.getTabObserver();
-    this.initObserver();
   }
 
   getTabObserver() {
-    new MutationObserver(function(mutations) {
-      console.log(mutations);
+    var queue = this.queue;
+    var handle = this.handleCommand;
+
+    const observer = new MutationObserver(function(mutations) {
       mutations.forEach((mutation) => {
         if (mutation.type === 'childList') {
           mutation.addedNodes.forEach((node) => {
             const tab = node.querySelector('.tab');
             const tab_id = tab.id.split('-')[1];
+            const requestForTab = queue[tab_id];
 
-            const requestForTab = this.queue[tab_id];
-
+            console.log('REQUEST FOR TAB', requestForTab);
             if (requestForTab) {
-              for (let i = 0; i < requestForTab.length; i++) {
-                let entry = requestForTab[i];
-                handleCommand(entry.cmd, entry.sendResponse);
-                requestForTab.shift();
+              let entry;
+              while (entry = requestForTab.shift()) {
+                console.log('.-', entry);
+                handle(entry.command, entry.sendResponse);
               }
             }
           });
         }
       });
     });
-  }
 
-
-  onTabElementCreated(tabId) {
-
-  }
-
-  async initObserver() {
-    let tabStrip = document.getElementsByClassName('tab-strip')[0];
+    const tabStrip = document.getElementsByClassName('tab-strip')[0];
     if (!tabStrip) {
       setTimeout(() => {
-            initObserver();
+            this.getTabObserver();
           }, 50);
       return;
     }
 
-    this.observer.observe(document.getElementsByClassName('tab-strip')[0], {
+    observer.observe(tabStrip, {
       attributes: false,
       childList: true,
       characterData: false
     });
-    console.log('Observing');
+
+
+    return observer;
   }
 
-  queueCommand(command, sendResponse) {
+
+
+  add(command, sendResponse) {
     if (command.tabId) {
       if (!this.queue[command.tabId]) {
         this.queue[command.tabId] = [];
       }
 
-      this.queue[command.tabId].push(command);
+      let element = new TabControl().getElement(command.tabId);
+
+      if (element) {
+        this.handleCommand(command, sendResponse);
+      } else {
+        this.queue[command.tabId].push({ command: command, sendResponse: sendResponse });
+      }
     } else {
       this.handleCommand(command, sendResponse);
     }
@@ -92,14 +96,10 @@ class CommandQueue {
 
   handleCommand(request, sendResponse) {
     const tabcontrol = new TabControl();
-
-    if (request.tabId) {
-      const strip = tabcontrol.getElement(request.tabId);
-      if (!strip) {
-        return;
-      }
+    if (!request) {
+      console.error('no command in handleCommand');
+      return;
     }
-
     switch (request.command) {
 
       /*
@@ -154,7 +154,9 @@ class CommandQueue {
         return sendResponse('Invalid command: ' + request.command);
     }
 
-    sendResponse(request.command + ' executed');
+    if (typeof sendResponse === 'function') {
+      sendResponse(request.command + ' executed');
+    }
   }
 
 }
@@ -280,6 +282,7 @@ class TabControl {
 
 
 class Messaging {
+
   constructor() {
     this.port = null;
   }
@@ -296,36 +299,23 @@ class Messaging {
 
   onReceived(request) {
     console.log('onreceived', request);
-    // const sendResponse = (response) => { this.port.postMessage(response) };
+    var send = this.send;
+    // const sendResponse = (response) => { this.send(response) };
     const sendResponse = (response) => { console.log('Dummy sendResponse', response) };
-    const tabcontrol = new TabControl();
-
-    if (request.tabId) {
-      const tabElement = tabcontrol.getElement(request.tabId);
-      // Command was sent before element was created -> queue command
-      if (!tabElement) {
-        eventQueue[request.tabId] = {request: request, sendResponse: sendResponse};
-        console.log('Request queued', request);
-        return;
-      }
-    }
-    console.log('Handling: ', request);
-
-    handleCommand(request, sendResponse);
+    cmdQueue.add(request, sendResponse);
+    console.log('Request queued', request);
   }
 
   send(msg) {
     if (this.port) {
       console.log('sending msg', msg);
-      let a = this.port.postMessage(msg);
-      console.log(a);
+      this.port.postMessage(msg);
     } else {
       throw new Error('Connection not established');
     }
   }
 }
 
+let cmdQueue = new CommandQueue();
 let messaging = new Messaging();
 messaging.init();
-
-let commandQueue = new CommandQueue();
