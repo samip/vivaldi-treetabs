@@ -45,31 +45,30 @@ class ChromeCallbacks {
 
       // This lags sometimes.
       // TODO: keep track of tab order to avoid api call?
-      chrome.tabs.get(tabId, (tab:chrome.tabs.Tab) => {
-        root.children.tabs.forEach((item) => {
-          // get current index
-          chrome.tabs.get(item.id, (tab:chrome.tabs.Tab) => {
-            let prev = --tab.index;
+      root.children.tabs.forEach((item) => {
+        // get current index
+        chrome.tabs.get(item.id, (tab:chrome.tabs.Tab) => {
+          let prev = --tab.index;
 
-            if (prev > searchBelow) {
-              if (!minIndex || prev <= minIndex) {
-                minIndex = prev;
-              }
-            } else if (prev === searchBelow) {
+          if (prev > searchBelow) {
+            if (!minIndex || prev <= minIndex) {
               minIndex = prev;
-              console.log('exit untouched at ', prev);
-              return;
             }
+          } else if (prev === searchBelow) {
+            minIndex = prev;
+            console.log('exit untouched at ', prev);
+            return;
+          }
 
-            processed++;
+          processed++;
 
-            if (processed === root.children.tabs.size) {
-              minIndex = (minIndex) ? minIndex : 999;
-              chrome.tabs.move([item.id], {index: minIndex});
-            }
-          });
+          if (processed === root.children.tabs.size) {
+            minIndex = (minIndex) ? minIndex : 999;
+            chrome.tabs.move([item.id], {index: minIndex});
+          }
         });
       });
+
     }
   }
 

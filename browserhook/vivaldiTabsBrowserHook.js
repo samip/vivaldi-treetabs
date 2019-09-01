@@ -1,6 +1,28 @@
 /*
-Extension of Vivaldi Tabs extension.
+Control browser ui from extension.
+
+Called from vivaldi-tabs extension to set tab indentation.
+
+example tab strip html:
+
+<div id="tab-37" class="tab active" tabindex="-1">
+  <div class="tab-header">
+    <span class="favicon jstest-favicon-image">
+    <img width="16" height="16" alt="" srcset="chrome://favicon/size/16@2x/ht"></span>
+    <span class="title">DevTools - chrome-extension://mpognobbkildjkofajifpdfhcoklimli/browser.html</span>
+    <button class="close" title="Close Tab Alt click to close other tabs except this one">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+      <path d="M13.5 6l-1.4-1.4-3.1 3-3.1-3L4.5 6l3.1 3.1-3 2.9 1.5 1.4L9 10.5l2.9 2.9 1.5-1.4-3-2.9"></path>
+    </svg>
+    </button>
+  </div>
+  <div class="tab-group-indicator"></div>
+</div>
+
 */
+
+console.log('Browserhook loaded');
+
 var eventQueue = new Map();
 
 let observer = new MutationObserver(function(mutations) {
@@ -10,19 +32,17 @@ let observer = new MutationObserver(function(mutations) {
     mutation.addedNodes.forEach((node) => {
       let tab = node.querySelector('.tab');
       let tab_id = tab.id.split('-')[1];
-      console.log('created', tab_id);
       const requestForTab = eventQueue[tab_id];
+
       if (requestForTab) {
-        console.log('queue', requestForTab);
         handleCommand(requestForTab.request, requestForTab.sendResponse);
         eventQueue.delete(tab_id);
-      } else {
-        console.log('no queue');
       }
     });
     }
   });
 });
+
 
 
 function initObserver() {
@@ -106,49 +126,12 @@ function handleCommand(request, sendResponse) {
       default:
         console.log('Invalid command');
         return sendResponse('Invalid command: ' + request.command);
-        break
     }
 
     sendResponse(request.command + ' executed');
 }
 
-chrome.runtime.onMessageExternal.addListener(function (request, sender, sendResponse) {
-    console.log('external in browser.html', request, sender)
 
-    var tabcontrol = new TabControl()
-    if (request.tabId) {
-      const strip = tabcontrol.getElement(request.tabId);
-      if (!strip) {
-        eventQueue[request.tabId] = {request: request, sendResponse: sendResponse};
-      } else {
-        handleCommand(request, sendResponse);
-      }
-    }
-  }
-)
-
-/*
-Control browser ui from extension.
-
-Called from vivaldi-tabs extension to set tab indentation.
-
-example tab strip html:
-
-<div id="tab-37" class="tab active" tabindex="-1">
-  <div class="tab-header">
-    <span class="favicon jstest-favicon-image">
-    <img width="16" height="16" alt="" srcset="chrome://favicon/size/16@2x/ht"></span>
-    <span class="title">DevTools - chrome-extension://mpognobbkildjkofajifpdfhcoklimli/browser.html</span>
-    <button class="close" title="Close Tab Alt click to close other tabs except this one">
-    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
-      <path d="M13.5 6l-1.4-1.4-3.1 3-3.1-3L4.5 6l3.1 3.1-3 2.9 1.5 1.4L9 10.5l2.9 2.9 1.5-1.4-3-2.9"></path>
-    </svg>
-    </button>
-  </div>
-  <div class="tab-group-indicator"></div>
-</div>
-
-*/
 
 class TabControl {
 
@@ -286,6 +269,29 @@ class ExtensionBridge {
     });
   }
 }
+
+chrome.runtime.onConnectExternal.addListener(function(port) {
+  console.log('Connected', port);
+
+  port.onMessage.addListener(function(request) {
+    const sendResponse = (response) => { port.postMessage(response) };
+    const tabcontrol = new TabControl();
+
+    if (request.tabId) {
+      const tabElement = tabcontrol.getElement(request.tabId);
+      // Command was sent before element was created -> queue command
+      if (!tabElement) {
+        eventQueue[request.tabId] = {request: request, sendResponse: sendResponse};
+        return;
+      }
+    }
+
+    handleCommand(request, sendResponse);
+  });
+});
+
+
+
 
 /// "Close Children" button clicked. Send close children command to the extension
 function onClickedCloseChildren(event, tabId) {
