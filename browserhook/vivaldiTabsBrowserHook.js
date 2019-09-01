@@ -23,48 +23,74 @@ example tab strip html:
 
 console.log('Browserhook loaded');
 
-var eventQueue = new Map();
+class CommandQueue {
 
-let observer = new MutationObserver(function(mutations) {
-  console.log(mutations);
-  mutations.forEach((mutation) => {
-    if (mutation.type === 'childList') {
-    mutation.addedNodes.forEach((node) => {
-      let tab = node.querySelector('.tab');
-      let tab_id = tab.id.split('-')[1];
-      const requestForTab = eventQueue[tab_id];
-
-      if (requestForTab) {
-        handleCommand(requestForTab.request, requestForTab.sendResponse);
-        eventQueue.delete(tab_id);
-      }
-    });
-    }
-  });
-});
-
-
-
-function initObserver() {
-  let tabStrip = document.getElementsByClassName('tab-strip')[0];
-  if (!tabStrip) {
-    setTimeout(() => {
-          initObserver();
-        }, 50);
-    return;
+  constructor() {
+    this.queue = new Map();
+    this.tabObserver = this.getTabObserver();
+    this.initObserver();
   }
 
-  observer.observe(document.getElementsByClassName('tab-strip')[0], {
-    attributes: false,
-    childList: true,
-    characterData: false
-  });
+  getTabObserver() {
+    new MutationObserver(function(mutations) {
+      console.log(mutations);
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'childList') {
+          mutation.addedNodes.forEach((node) => {
+            const tab = node.querySelector('.tab');
+            const tab_id = tab.id.split('-')[1];
 
-}
+            const requestForTab = this.queue[tab_id];
 
-initObserver();
+            if (requestForTab) {
+              for (let i = 0; i < requestForTab.length; i++) {
+                let entry = requestForTab[i];
+                handleCommand(entry.cmd, entry.sendResponse);
+                requestForTab.shift();
+              }
+            }
+          });
+        }
+      });
+    });
+  }
 
-function handleCommand(request, sendResponse) {
+
+  onTabElementCreated(tabId) {
+
+  }
+
+  async initObserver() {
+    let tabStrip = document.getElementsByClassName('tab-strip')[0];
+    if (!tabStrip) {
+      setTimeout(() => {
+            initObserver();
+          }, 50);
+      return;
+    }
+
+    this.observer.observe(document.getElementsByClassName('tab-strip')[0], {
+      attributes: false,
+      childList: true,
+      characterData: false
+    });
+    console.log('Observing');
+  }
+
+  queueCommand(command, sendResponse) {
+    if (command.tabId) {
+      if (!this.queue[command.tabId]) {
+        this.queue[command.tabId] = [];
+      }
+
+      this.queue[command.tabId].push(command);
+    } else {
+      this.handleCommand(command, sendResponse);
+    }
+  }
+
+
+  handleCommand(request, sendResponse) {
     const tabcontrol = new TabControl();
 
     if (request.tabId) {
@@ -129,8 +155,9 @@ function handleCommand(request, sendResponse) {
     }
 
     sendResponse(request.command + ' executed');
-}
+  }
 
+}
 
 
 class TabControl {
@@ -141,10 +168,9 @@ class TabControl {
     this.indentAttribute = 'marginLeft';
   }
 
-  async IndentTab (tabId, indentLevel, pass) {
-    let element = this.getElement(tabId);
-    let indentVal = (indentLevel * this.indentStep) + this.indentUnit;
-    console.log(indentLevel + '*' + this.indentStep + '+' + this.indentUnit + '=' + indentVal + '  pass:' + pass);
+  IndentTab (tabId, indentLevel, pass) {
+    const element = this.getElement(tabId);
+    const indentVal = (indentLevel * this.indentStep) + this.indentUnit;
     element.style[this.indentAttribute] = indentVal;
   }
 
@@ -153,13 +179,13 @@ class TabControl {
   }
 
   appendAttribute (tabId, attribute, value) {
-    let element = this.getElement(tabId);
-    let oldValue = element.getAttribute(attribute);
+    const element = this.getElement(tabId);
+    const oldValue = element.getAttribute(attribute);
     element.setAttribute(attribute, oldValue + ';' + value);
   }
 
   setAttribute (tabId, attribute, value) {
-    let element = this.getElement(tabId);
+    const element = this.getElement(tabId);
     element.setAttribute(attribute, value);
   }
 
@@ -167,14 +193,16 @@ class TabControl {
     this.SetText(tabId, tabId);
   }
 
-  SetText (tabId, text) {
-    let element = this.getElement(tabId);
+  SetText (tabId, text) {0
+    const element = this.getElement(tabId);
+
     if (!element) {
       console.log('Missing element for tabId' + tabId);
       return;
     }
-    let oldTitle = element.querySelector('.title');
-    let oldCustom = oldTitle.querySelector('.custom-title')
+    const oldTitle = element.querySelector('.title');
+    const oldCustom = oldTitle.querySelector('.custom-title')
+
     if (oldCustom) {
       oldCustom.innerText = text;
     } else {
@@ -189,12 +217,12 @@ class TabControl {
   }
 
   showCloseChildrenButton (tabId) {
-    let element = this.getElement(tabId);
-    let buttonClass = TabControl.getCloseChildrenButtonClassname();
-    let closeButton = element.querySelector('.close');
-    let alreadyCreated = closeButton.previousSibling.classList.contains(buttonClass);
-    let existingButton = element.querySelector('.' + buttonClass);
-    console.log(existingButton);
+    const element = this.getElement(tabId);
+    const buttonClass = TabControl.getCloseChildrenButtonClassname();
+    const closeButton = element.querySelector('.close');
+    const alreadyCreated = closeButton.previousSibling.classList.contains(buttonClass);
+    const existingButton = element.querySelector('.' + buttonClass);
+
     if (existingButton) {
       existingButton.style.visibility = 'initial';
     } else {
@@ -203,14 +231,19 @@ class TabControl {
       closeChildrenButton.classList.add('close');
       closeChildrenButton.classList.add(buttonClass);
       closeChildrenButton.innerHTML = TabControl.getCloseChildrenButtonSVG();
-      closeChildrenButton.addEventListener('click', (event) => onClickedCloseChildren(event, tabId) );
+
+      closeChildrenButton.addEventListener('click', (event) => {
+        messaging.send({ command: 'CloseChildren', tabId: tabId  });
+      });
       closeButton.parentNode.insertBefore(closeChildrenButton, closeButton); // insert closeChildrenButton before the real close button
     }
   }
+
   hideCloseChildrenButton (tabId) {
-    let element = this.getElement(tabId);
-    let buttonClass = TabControl.getCloseChildrenButtonClassname();
-    let button = element.querySelector('.' + buttonClass);
+    const element = this.getElement(tabId);
+    const buttonClass = TabControl.getCloseChildrenButtonClassname();
+    const button = element.querySelector('.' + buttonClass);
+
     if (button) {
       button.style.visibility = 'hidden';
     }
@@ -243,17 +276,16 @@ class TabControl {
     return document.getElementById('tab-' + tabId)
   }
 
-  async waitElement(tabId) {
-    while(!document.querySelector("#tab-" + tabId)) {
-      await new Promise(waitElement => setTimeout(waitElement, 500));
-    }
-  }
 }
 
 
 class Messaging {
   constructor() {
     this.port = null;
+  }
+
+  init() {
+    chrome.runtime.onConnectExternal.addListener(messaging.onConnected.bind(messaging));
   }
 
   onConnected(port) {
@@ -278,6 +310,7 @@ class Messaging {
       }
     }
     console.log('Handling: ', request);
+
     handleCommand(request, sendResponse);
   }
 
@@ -293,14 +326,6 @@ class Messaging {
 }
 
 let messaging = new Messaging();
-chrome.runtime.onConnectExternal.addListener(messaging.onConnected.bind(messaging));
+messaging.init();
 
-
-/// "Close Children" button clicked. Send close children command to the extension
-function onClickedCloseChildren(event, tabId) {
-  // send Close Children signal to extension
-  let cmdObj = { command: 'CloseChildren', tabId: tabId  };
-  messaging.send(cmdObj);
-  // let bridge = new ExtensionBridge();
-  //bridge.sendMessage(cmdObj);
-}
+let commandQueue = new CommandQueue();
