@@ -6,6 +6,14 @@ import Window from './Window';
 
 class ChromeCallbacks {
 
+  static onMessage(message: any, sender: any, sendResponse: any) {
+    console.log('OnMessage');
+    if (message == 'getScreenState') {
+      console.log('Screenstate');
+    }
+    console.log(message, sender, sendResponse);
+  }
+
   static onTabCreated(tab: chrome.tabs.Tab) {
     const node = new Node(tab);
     tabContainer.add(node);
@@ -175,7 +183,7 @@ class ChromeCallbacks {
 chrome.windows.getAll(windowContainer.initFromArray.bind(windowContainer));
 chrome.tabs.query({}, tabContainer.initFromArray.bind(tabContainer));
 
-
+chrome.runtime.onMessage.addListener(ChromeCallbacks.onMessage);
 chrome.runtime.onMessageExternal.addListener(ChromeCallbacks.onMessageExternal);
 chrome.commands.onCommand.addListener(ChromeCallbacks.onCommand);
 chrome.tabs.onCreated.addListener(ChromeCallbacks.onTabCreated);
