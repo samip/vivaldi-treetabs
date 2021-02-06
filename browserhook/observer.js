@@ -1,4 +1,7 @@
 class VivaldiUIObserver {
+
+  static tabContainerElementId = 'tabs-tabbar-container'
+
   constructor() {
     this.tabContainerObserver = null
     this.tabObserver = null
@@ -7,28 +10,35 @@ class VivaldiUIObserver {
       this.eventHandlers[eventName].push(fn)
     }
 
-    this.tabs = {
+    this.tab = {
       eventHandlers: {
-        onCreated: []
+        onCreated: [] // function(tabElement, tabId)
       },
       addCallback: addCallback
     }
 
     this.tabContainer = {
       eventHandlers: {
-        onCreated: [],
-        onRemoved: []
+        onCreated: [], // function(tabContainerElement)
+        onRemoved: []  // function(tabContainerElement)
       },
       addCallback: addCallback
     }
   }
 
   init() {
-    initTabContainerObserver
+    waitForElement('#main > .inner', 5000)
+      .then(
+        tabContainerParent => {
+          this.initTabContainerObserver(tabContainerParent)
+          const tabContainer = this.findTabContainerFromDocument()
+          tabContainer && this.onTabContainerCreated(tabContainer)
+        },
+        error => console.error(error)
+      )
   }
 
   initTabContainerObserver(tabContainerParent) {
-    console.log(`Init ${tabContainerParent}`)
     this.tabContainerObserver = new MutationObserver(this.findTabContainerFromMutations.bind(this))
     this.tabContainerObserver.observe(tabContainerParent, {
       attributes: false,
@@ -48,11 +58,9 @@ class VivaldiUIObserver {
 
   onTabContainerCreated(tabContainerElement) {
     console.log('added container')
-
     this.tabContainer.eventHandlers['onCreated'].forEach(eventHandler => eventHandler(tabContainerElement))
-    // Start observing for tab-buttons
-    const tabStrip = tabContainerElement.querySelector('.tab-strip')
-    // TODO: avoid searching whole document
+
+    // TODO: avoid searching whole document, use tabContainerElement instead
     waitForElement('.tab-strip', 5000)
       .then(
         element => this.initTabObserver(element),
@@ -61,7 +69,6 @@ class VivaldiUIObserver {
   }
 
   onTabContainerRemoved(tabContainerElement) {
-    // Start observing for tab-strips
     console.log('removed', tabContainerElement)
     this.tabContainer.eventHandlers['onRemoved'].forEach(eventHandler => eventHandler(tabContainerElement))
   }
@@ -74,9 +81,7 @@ class VivaldiUIObserver {
     }
 
     const id = getTabId(tabElement)
-    if (id) {
-      this.tabs.eventHandlers.onCreated.forEach(eventHandler => eventHandler(tabElement, id))
-    }
+    id && this.tab.eventHandlers.onCreated.forEach(eventHandler => eventHandler(tabElement, id))
   }
 
   /*
@@ -86,7 +91,7 @@ class VivaldiUIObserver {
   */
 
   findTabContainerFromMutations(mutations) {
-    const isTabContainer = node => node.id == 'tabs-tabbar-container'
+    const isTabContainer = node => node.id === VivaldiUIObserver.tabContainerElementId
 
     mutations.forEach(mutation => {
       mutation.addedNodes.forEach(node => isTabContainer(node) && this.onTabContainerCreated(node))
@@ -94,11 +99,14 @@ class VivaldiUIObserver {
     })
   }
 
+  findTabContainerFromDocument() {
+    return document.getElementById(VivaldiUIObserver.tabContainerElementId)
+  }
+
   findTabsFromMutations(mutations) {
     const findTabDiv = node => node.querySelector('.tab')
 
     mutations.forEach(mutation => {
-      // Assume everything created under tab strip to be a tab
       mutation.addedNodes.forEach(node => {
         const tabDiv = findTabDiv(node)
         tabDiv && this.onTabCreated(tabDiv)
@@ -120,7 +128,7 @@ function waitForElement(selector, rejectAfterMs) {
 
     var pollingTimer = setInterval(() => {
       element = document.querySelector(selector)
-      if( element) {
+      if (element) {
         resolve(element)
       } else {
         totalPollTime += retryTime
@@ -134,18 +142,7 @@ function waitForElement(selector, rejectAfterMs) {
 
 
 const vivaldiUI = new VivaldiUIObserver()
-
 vivaldiUI.tabContainer.addCallback('onCreated', element => console.log('refreshTree'))
 vivaldiUI.tabContainer.addCallback('onRemoved', element => console.log('startObservering'))
-vivaldiUI.tabs.addCallback('onCreated', (element, tabId) => console.log('indent' + tabId))
-console.log(vivaldiUI)
-
-const retryTime = 100
-const maxRetryAttempts = 5
-var retryAttempts = 0
-
-waitForElement('#main > .inner', 5000)
-  .then(
-    tabContainerParent => vivaldiUI.initTabContainerObserver(tabContainerParent),
-    error => console.error(error)
-  )
+vivaldiUI.tab.addCallback('onCreated', (element, tabId) => console.log('indent', tabId, element))
+vivaldiUI.init()
