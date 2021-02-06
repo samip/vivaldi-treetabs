@@ -301,6 +301,11 @@ class Messaging {
   onConnected(port) {
     this.port = port
     this.port.onMessage.addListener(this.onReceived)
+
+    if (chrome.runtime.lastError) {
+      console.log('caught')
+      console.log(chrome.runtime.lastError)
+    }
     console.log('Connected to browserhook', port)
   }
 
