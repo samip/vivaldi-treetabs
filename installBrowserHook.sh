@@ -59,23 +59,29 @@ cp "$dir/resources/vivaldi/browser.html" "$dir/resources/vivaldi/browser.html-$(
 alreadypatched=$(grep '<script src="vivaldiTabsBrowserHook.js"><\/script>' $dir/resources/vivaldi/browser.html);
 if [ "$alreadypatched" = "" ] ; then
     echo patching browser.html
-	# sed -i -e 's/<\/head>/<link rel="stylesheet" href="style\/custom.css" \/> <\/head>/' "$dir/resources/vivaldi/browser.html"
-	sed -i -e 's/<\/body>/   <script src="observer.js"><\/script>\n    <script src="vivaldiTabsBrowserHook.js"><\/script>\n  <\/body>/' "$dir/resources/vivaldi/browser.html"
+	sed -i -e 's/<\/body>/<script src="TabControl.js"><\/script> <script src="observer.js"><\/script>\n <script src="vivaldiTabsBrowserHook.js"><\/script>\n  <\/body>/' "$dir/resources/vivaldi/browser.html"
 
 else
     echo "browser.html has already been patched!"
 fi
 
 
+if [ -f "$mod_dir/TabControl.js" ] ; then
+    echo copying TabControl.js
+    cp -f "$mod_dir/TabControl.js" "$dir/resources/vivaldi/TabControl.js"
+else
+    echo observer.js missing in $mod_dir
+fi
+
 if [ -f "$mod_dir/vivaldiTabsBrowserHook.js" ] ; then
-    echo copying custom.js
+    echo copying vivaldiTabsBrowserHook.js
     cp -f "$mod_dir/vivaldiTabsBrowserHook.js" "$dir/resources/vivaldi/vivaldiTabsBrowserHook.js"
 else
     echo vivaldiTabsBrowserHook.js missing in $mod_dir
 fi
 
 if [ -f "$mod_dir/observer.js" ] ; then
-    echo copying custom.js
+    echo copying observer.js
     cp -f "$mod_dir/observer.js" "$dir/resources/vivaldi/observer.js"
 else
     echo observer.js missing in $mod_dir

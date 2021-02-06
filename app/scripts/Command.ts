@@ -52,9 +52,8 @@ export default class Command {
     }
   }
 
-
-  onReceived(request:any) {
-    console.log('External message received', request);
+  onReceived(request: any, port: any) {
+    console.log('External message received', request)
 
     if (!request.command) {
       console.error('Missing command');
@@ -73,6 +72,9 @@ export default class Command {
       case 'RefreshTabTree':
         tabContainer.applyAll(node => node.renderIndentation())
         break
+      case 'GetTabIndent':
+        tabContainer.get(request.tabId).depth()
+        break
       default:
         console.error('Unknown command from browserhook', request.command);
     }
@@ -80,5 +82,6 @@ export default class Command {
   }
 
 }
-
+// export type MessageResponse = (message:any, port:Port) => void
 export type ResponseCallback = (response: any) => any;
+export type cb = (message: any, port: chrome.runtime.Port) => void;

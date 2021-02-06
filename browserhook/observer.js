@@ -139,10 +139,3 @@ function waitForElement(selector, rejectAfterMs) {
     }, retryTime)
   });
 }
-
-
-const vivaldiUI = new VivaldiUIObserver()
-vivaldiUI.tabContainer.addCallback('onCreated', element => console.log('refreshTree'))
-vivaldiUI.tabContainer.addCallback('onRemoved', element => console.log('startObservering'))
-vivaldiUI.tab.addCallback('onCreated', (element, tabId) => console.log('indent', tabId, element))
-vivaldiUI.init()
