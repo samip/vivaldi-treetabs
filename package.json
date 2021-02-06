@@ -16,7 +16,8 @@
     "dev:opera": "gulp --watch --vendor=opera",
     "dev:edge": "gulp --watch --vendor=edge",
     "lint": "standard",
-    "browser": "vivaldi-snapshot --load-extension=dist/chrome/ --flag-switches-begin --debug-packed-apps --silent-debugger-extension-api --flag-switches-end"
+    "browser": "vivaldi-snapshot --load-extension=dist/chrome/ --remote-debugging-port=2012 --flag-switches-begin --debug-packed-apps --silent-debugger-extension-api --flag-switches-end",
+    "kill-browser": "pkill -f vivaldi-snapshot"
 
   },
   "standard": {

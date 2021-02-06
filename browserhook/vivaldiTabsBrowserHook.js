@@ -21,7 +21,7 @@ example tab strip html:
 
 */
 
-console.log('Browserhook loaded');
+console.log('Browserhook loaded')
 
 class CommandQueue {
 
@@ -100,6 +100,7 @@ class CommandQueue {
       console.error('no command in handleCommand');
       return;
     }
+    tabcontrol.showRefreshViewButton()
     switch (request.command) {
 
       /*
@@ -218,6 +219,27 @@ class TabControl {
      */
   }
 
+  showRefreshViewButton () {
+    const buttonId = 'refresh-tab-tree'
+    const existing = document.getElementById(buttonId)
+    if (existing) {
+      return;
+    }
+
+    const target = document.querySelector('#tabs-container > .toolbar')
+    const button = document.createElement('button')
+
+    button.innerText = 'Refresh'
+    button.id = 'refresh-tab-tree'
+    button.classList = 'button-toolbar refresh-tab-tree'
+
+    button.addEventListener('click', (event) => {
+      messaging.send({ command: 'RefreshTabTree' })
+    });
+
+    target.appendChild(button)
+  }
+
   showCloseChildrenButton (tabId) {
     const element = this.getElement(tabId);
     const buttonClass = TabControl.getCloseChildrenButtonClassname();
@@ -310,6 +332,10 @@ class Messaging {
     if (this.port) {
       console.log('sending msg', msg);
       this.port.postMessage(msg);
+      if (chrome.runtime.lastError) {
+        console.log('caught')
+        console.log(chrome.runtime.lastError)
+      }
     } else {
       throw new Error('Connection not established');
     }

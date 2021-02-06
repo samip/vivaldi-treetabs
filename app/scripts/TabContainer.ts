@@ -1,7 +1,12 @@
 import Node from './Node';
 
+// c/p from Node.ts
+// TODO: fix duplicate definition
+export type NodeCallback = (node: Node) => any;
+
 export class TabContainer {
 
+  // Tabs mapped by id
   tabs: Map<number, Node>;
 
   constructor() {
@@ -20,6 +25,13 @@ export class TabContainer {
     return node;
   }
 
+  applyAll(callback: NodeCallback): void {
+    this.tabs.forEach((node:Node, key:number) => {
+      console.log(node, callback)
+      callback(node)
+    })
+  }
+
   getFirst(): Node {
     return this.tabs.values().next().value;
   }
@@ -34,7 +46,7 @@ export class TabContainer {
     return this.tabs.size === 0;
   }
 
-  /// Create nodes and their relationships
+  // Create nodes and their relationships
   initFromArray(tabs:chrome.tabs.Tab[]) {
     const parentQueue = new Map<number, Array<Node>>();
 

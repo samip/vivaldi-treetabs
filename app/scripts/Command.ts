@@ -39,16 +39,14 @@ export default class Command {
   }
 
   send(callback?:ResponseCallback) {
-    let logEnabled = this.logEnabled;
-    let parameters = {...this.parameters, ...{command:this.command}};
+    let parameters = {...this.parameters, ...{command: this.command}};
 
-     if (logEnabled) {
+     if (this.logEnabled) {
       console.info('Sending command to extension: ' + this.browserExtensionId);
       console.table(parameters);
     }
 
     this.port.postMessage(parameters);
-
     if (chrome.runtime.lastError) {
       throw new Error('postMessage error: ' + chrome.runtime.lastError);
     }
@@ -72,7 +70,9 @@ export default class Command {
           console.error('Trying to close children of missing tab');
         }
         break;
-
+      case 'RefreshTabTree':
+        tabContainer.applyAll(node => node.renderIndentation())
+        break
       default:
         console.error('Unknown command from browserhook', request.command);
     }

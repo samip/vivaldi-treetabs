@@ -5,10 +5,12 @@
 # License: GPL
 ##############################################
 
-if [ $UID != 0 ] ; then
-    echo "Please use 'sudo' or log in as root."
-    exit 255
-fi
+# not needed if browser.html is writable
+
+# if [ $UID != 0 ] ; then
+    # cho "Please use 'sudo' or log in as root."
+    # exit 255
+# fi
 
 mod_dir=browserhook
 
