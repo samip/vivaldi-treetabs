@@ -22,3 +22,4 @@ gulp v.3.9.0
 # Other
 `vivaldi-snapshot --load-extension=/home/sami/Documents/vivaldi-treetabs/dist/chrome/ --flag-switches-begin --debug-packed-apps --silent-debugger-extension-api --flag-switches-end`
 
+./installBrowserHook.sh && npm run kill-browser; npm run browser
