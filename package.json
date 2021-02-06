@@ -15,7 +15,9 @@
     "dev:firefox": "gulp --watch --vendor=firefox",
     "dev:opera": "gulp --watch --vendor=opera",
     "dev:edge": "gulp --watch --vendor=edge",
-    "lint": "standard"
+    "lint": "standard",
+    "browser": "vivaldi-snapshot --load-extension=dist/chrome/ --flag-switches-begin --debug-packed-apps --silent-debugger-extension-api --flag-switches-end"
+
   },
   "standard": {
     "globals": [
@@ -28,11 +30,11 @@
     "babel-core": "6.x.x",
     "babel-loader": "7.x.x",
     "babel-preset-env": "1.x.x",
-    "chai": "4.x.x",
+    "chai": "^4.3.0",
     "chromereload": "0.x.x",
     "debounce": "1.x.x",
     "del": "3.x.x",
-    "gulp": "3.x.x",
+    "gulp": "^3.9.0",
     "gulp-bump": "2.x.x",
     "gulp-cache": "0.x.x",
     "gulp-clean-css": "^3.x.x",
@@ -62,6 +64,6 @@
   "dependencies": {
     "gulp-open": "^3.0.1",
     "npm-remote-ls": "^1.3.2",
-    "typescript": "^3.9.3"
+    "typescript": "^3.9.7"
   }
 }

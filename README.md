@@ -1,4 +1,8 @@
 # Building
+
+tested: node v11
+gulp v.3.9.0
+
 `npm install typescript` or `npm link typescript` if you have it installed globally.
 
 `npm install`
