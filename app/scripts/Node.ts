@@ -38,7 +38,7 @@ export default class Node {
   }
 
 
-  /** Call function on every descendant of Node **/
+  /** Call function on every descendant (children, children of children) of Node **/
   applyDescendants(callback: NodeCallback): void {
     this.children.tabs.forEach( (node:Node, key:number) => {
       callback(node);
@@ -46,7 +46,7 @@ export default class Node {
     });
   }
 
-  /*** Traverse to root, return distance  ***/
+  /** Traverse to root, return distance  **/
   calculateDistanceToRoot(): number {
     let helper = function(node:Node, distance:number): any {
       if (node.parent) {
@@ -83,12 +83,6 @@ export default class Node {
 
   /** Set parent **/
   parentTo(parent: Node): void {
-    /*
-    if (this.parent) {
-      this.parent.children.remove(this);
-    }
-    */
-
     // Add node to new parent's child list
     parent.children.add(this);
     this.parent = parent;
@@ -122,13 +116,15 @@ export default class Node {
   removeChildren(): void {
     this.applyDescendants((child:Node) => {
       chrome.tabs.remove(child.id);
+      if (chrome.runtime.lastError) {
+        console.log('Error on removeChildren')
+      }
     });
   }
 
-  /*** Send IndentTab command to BrowserHook ***/
+  /** Send IndentTab command to BrowserHook **/
   renderIndentation(): void {
     const depth = this.depth();
     this.command('IndentTab', {'indentLevel': depth});
   }
-
 }

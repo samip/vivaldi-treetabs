@@ -82,6 +82,7 @@ class ChromeCallbacks {
 
 
   static onTabRemoved(tabId:number) {
+    console.log('onTabRemoved')
     let node = tabContainer.get(tabId);
     node.remove();
     tabContainer.remove(node);

@@ -6,10 +6,8 @@ Called from vivaldi-tabs extension to set tab indentation.
 See Command class for available commands
 */
 
-console.log('Browserhook loaded')
 
 class CommandQueue {
-
   constructor() {
     this.queue = new Map()
     this.tabObserver = this.getTabObserver()
@@ -29,7 +27,6 @@ class CommandQueue {
             if (requestForTab) {
               let entry
               while (entry = requestForTab.shift()) {
-                console.log('.-', entry)
                 handle(entry.command, entry.sendResponse)
               }
             }
@@ -82,14 +79,13 @@ class CommandQueue {
       console.error('no command in handleCommand')
       return
     }
-    tabcontrol.showRefreshViewButton()
     switch (request.command) {
 
       /*
-      Indents tab
+        Indents tab by <indentLevel> steps.
 
-      @param tabId
-      @param indentLevel - how many steps tab needs to be indented. One step is by default 20 px
+        @param tabId
+        @param indentLevel - how many steps tab needs to be indentedx
        */
       case 'IndentTab':
         if (typeof request.tabId === 'undefined' || typeof request.indentLevel === 'undefined') {
@@ -111,7 +107,6 @@ class CommandQueue {
         break
 
       /* Append attribute to tab strip. Used in debugging only.
-       *
        */
       case 'appendAttribute':
         // UNSAFE
@@ -141,12 +136,10 @@ class CommandQueue {
       sendResponse(request.command + ' executed')
     }
   }
-
 }
 
 
 class TabControl {
-
   constructor () {
     this.indentStep = 20
     this.indentUnit = 'px'
@@ -156,7 +149,15 @@ class TabControl {
   IndentTab (tabId, indentLevel, pass) {
     const element = this.getElement(tabId)
     const indentVal = (indentLevel * this.indentStep) + this.indentUnit
-    element.style[this.indentAttribute] = indentVal
+    if (element.parentElement && element.parentElement.classList.contains('tab-position')) {
+      element.parentElement.style[this.indentAttribute] = indentVal
+      console.log(element.parentElement)
+    } else {
+      console.error('Broken by update')
+      console.error(element.parentElement)
+      // Probably broken by update
+    }
+
   }
 
   SetIndentStyle () {
@@ -178,7 +179,7 @@ class TabControl {
     this.SetText(tabId, tabId)
   }
 
-  SetText (tabId, text) {0
+  SetText (tabId, text) {
     const element = this.getElement(tabId)
 
     if (!element) {
@@ -278,15 +279,14 @@ class TabControl {
           </svg>`
   }
 
+  // The dom element for tab button
   getElement (tabId) {
     return document.getElementById('tab-' + tabId)
   }
-
 }
 
 
 class Messaging {
-
   constructor() {
     this.port = null
   }
@@ -303,14 +303,12 @@ class Messaging {
     this.port.onMessage.addListener(this.onReceived)
 
     if (chrome.runtime.lastError) {
-      console.log('caught')
       console.log(chrome.runtime.lastError)
     }
     console.log('Connected to browserhook', port)
   }
 
   onReceived(request) {
-    console.log('onReceived', request)
     var send = this.send
     const sendResponse = (response) => { console.log('Dummy sendResponse', response) }
     cmdQueue.add(request, sendResponse)
@@ -318,19 +316,20 @@ class Messaging {
   }
 
   send(msg) {
-    if (this.port) {
-      console.log('sending msg', msg)
-      this.port.postMessage(msg)
-      if (chrome.runtime.lastError) {
-        console.log('caught')
-        console.log(chrome.runtime.lastError)
-      }
-    } else {
+    if (!this.port) {
       throw new Error('Connection not established')
+    }
+
+    console.log('sending msg', msg)
+    this.port.postMessage(msg)
+    if (chrome.runtime.lastError) {
+      log('Caught', LogType.info)
+      console.log(chrome.runtime.lastError)
     }
   }
 }
 
+console.log('Browserhook loaded')
 let cmdQueue = new CommandQueue()
 let messaging = new Messaging()
 messaging.init()
