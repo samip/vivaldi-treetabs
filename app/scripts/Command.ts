@@ -52,7 +52,7 @@ export default class Command {
     }
   }
 
-  onReceived(request: any, port: any) {
+  onReceived(request: any, port: chrome.runtime.Port) {
     console.log('External message received', request)
 
     if (!request.command) {
@@ -61,7 +61,7 @@ export default class Command {
 
     switch (request.command) {
       case 'CloseChildren':
-        const node = tabContainer.get(request.tabId);
+        let node = tabContainer.get(request.tabId);
 
         if (node) {
           node.removeChildren();
@@ -73,7 +73,10 @@ export default class Command {
         tabContainer.applyAll(node => node.renderIndentation())
         break
       case 'GetTabIndent':
-        tabContainer.get(request.tabId).depth()
+        node = tabContainer.get(request.tabId);
+        if (node) {
+          port.postMessage({command: 'TabIndent', tabId: request.tabId, indent: node.depth()})
+        }
         break
       default:
         console.error('Unknown command from browserhook', request.command);
