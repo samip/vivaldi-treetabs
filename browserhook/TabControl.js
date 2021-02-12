@@ -117,7 +117,7 @@ class TabControl {
       closeChildrenButton.addEventListener('click', (event) => {
         messaging.send({ command: 'CloseChildren', tabId: tabId  })
       })
-      closeButton.parentNode.insertBefore(closeChildrenButton, closeButton) // insert closeChildrenButton before the real close button
+      closeButton.parentNode.insertBefore(closeChildrenButton, closeButton) // insert closeChildrenButton before the 'close tab' button
     }
   }
 
