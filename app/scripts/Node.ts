@@ -40,7 +40,7 @@ export default class Node {
 
   /** Call function on every descendant (children, children of children) of Node **/
   applyDescendants(callback: NodeCallback): void {
-    this.children.tabs.forEach( (node:Node, key:number) => {
+    this.children.tabs.forEach((node:Node) => {
       callback(node);
       return node.applyDescendants(callback);
     });
@@ -88,7 +88,7 @@ export default class Node {
     this.parent = parent;
     // Has children now -> show close children button
     if (!parent.isRoot) {
-      parent.command('showCloseChildrenButton');
+      parent.command('ShowCloseChildrenButton');
     }
   }
 
@@ -109,7 +109,7 @@ export default class Node {
 
     // only child was removed -> hide close children button
     if (!this.parent.isRoot && this.parent.children.isEmpty()) {
-      this.parent.command('hideCloseChildrenButton');
+      this.parent.command('HideCloseChildrenButton');
     }
   }
 
@@ -120,6 +120,15 @@ export default class Node {
         console.log('Error on removeChildren')
       }
     });
+  }
+
+  renderEverything(): void {
+    console.log(this.children)
+    console.log(this.children.isEmpty())
+    if (!this.children.isEmpty()) {
+      this.command('ShowCloseChildrenButton')
+    }
+    this.renderIndentation()
   }
 
   /** Send IndentTab command to BrowserHook **/

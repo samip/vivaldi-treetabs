@@ -27,7 +27,6 @@ export class TabContainer {
 
   applyAll(callback: NodeCallback): void {
     this.tabs.forEach((node:Node, key:number) => {
-      console.log(node, callback)
       callback(node)
     })
   }

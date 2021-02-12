@@ -21,8 +21,6 @@ class Messaging {
     Handle incoming command
   */
   onReceived(request) {
-    console.log(this)
-    console.log(this.tabControl)
     switch (request.command) {
       /*
         Indents tab by <indentLevel> steps.
@@ -54,14 +52,14 @@ class Messaging {
       /* Show or create 'Close child tabs' button in tab strip
        * @param TabId
        */
-      case 'showCloseChildrenButton':
+      case 'ShowCloseChildrenButton':
         this.tabControl.showCloseChildrenButton(request.tabId)
         break
 
       /* Hide 'Close child tabs' button in tab strip
        * @param TabId
        */
-      case 'hideCloseChildrenButton':
+      case 'HideCloseChildrenButton':
         this.tabControl.hideCloseChildrenButton(request.tabId)
         break
 
@@ -74,15 +72,15 @@ class Messaging {
   }
 
   send(msg) {
-    console.log(this, 'messing:send')
-    if (!this.port) {
-      console.error('No connection')
-      return
-    }
-
-    this.port.postMessage(msg)
-    if (chrome.runtime.lastError) {
-      console.log(chrome.runtime.lastError)
+    if (this.port) {
+      this.port.postMessage(msg)
+      console.log('Send', msg)
+      if (chrome.runtime.lastError) {
+        console.log(chrome.runtime.lastError)
+      }
+    } else {
+      console.log(this)
+      console.error('Trying to send without connection', msg)
     }
   }
 }

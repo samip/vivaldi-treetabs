@@ -82,7 +82,6 @@ class ChromeCallbacks {
 
 
   static onTabRemoved(tabId:number) {
-    console.log('onTabRemoved')
     let node = tabContainer.get(tabId);
     node.remove();
     tabContainer.remove(node);
@@ -102,9 +101,9 @@ class ChromeCallbacks {
   /*
   TODO: move children to new window with their parent?
    */
-  static onTabDetached(tabId:number, info:chrome.tabs.TabDetachInfo) {
+  static onTabDetached(tabId:number, _info:chrome.tabs.TabDetachInfo) {
     let node = tabContainer.get(tabId);
-    node.children.tabs.forEach((child: Node, key: number) => {
+    node.children.tabs.forEach((child: Node) => {
       child.parentTo(node.parent);
       child.renderIndentation();
     });

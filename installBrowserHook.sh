@@ -56,7 +56,7 @@ echo "Patch originating from "${mod_dir}" targeting "${dir} ;
 # backup browser.html
 cp "$dir/resources/vivaldi/browser.html" "$dir/resources/vivaldi/browser.html-$(date +%Y-%m-%dT%H-%M-%S)"
 
-alreadypatched=$(grep '<script src="vivaldiTabsBrowserHook.js"><\/script>' $dir/resources/vivaldi/browser.html);
+alreadypatched=$(grep '<script src="VivaldiUIObserver.js"><\/script>' $dir/resources/vivaldi/browser.html);
 if [ "$alreadypatched" = "" ] ; then
     echo patching browser.html
 	sed -i -e 's/<\/body>/<script src="TabControl.js"><\/script> <script src="VivaldiUIObserver.js"><\/script>\n <script src="Messaging.js"><\/script><script src="Init.js"><\/script>\n  <\/body>/' "$dir/resources/vivaldi/browser.html"

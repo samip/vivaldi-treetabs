@@ -17,7 +17,6 @@ class TabControl {
     const indentVal = (indentLevel * this.indentStep) + this.indentUnit
     if (element.parentElement && element.parentElement.classList.contains('tab-position')) {
       element.parentElement.style[this.indentAttribute] = indentVal
-      console.log(element.parentElement)
     } else {
       console.error('Broken by update')
       console.error(element.parentElement)
@@ -79,12 +78,6 @@ class TabControl {
     }
   }
 
-  showCollapseChildrenButton (tabId) {
-    /*
-     * This is next to impossible to implement since tabs have relative top coordinates calculated by Vivaldi.
-     */
-  }
-
   showRefreshViewButton () {
     const buttonId = 'refresh-tab-tree'
     const existing = document.getElementById(buttonId)
@@ -99,8 +92,8 @@ class TabControl {
     button.id = 'refresh-tab-tree'
     button.classList = 'button-toolbar refresh-tab-tree'
 
-    button.addEventListener('click', (event) => {
-      messaging.send({ command: 'RefreshTabTree' })
+    button.addEventListener('click', (_event) => {
+      messaging.send({ command: 'RenderAllTabs' })
     })
 
     target.appendChild(button)
@@ -110,7 +103,6 @@ class TabControl {
     const element = this.getElement(tabId)
     const buttonClass = TabControl.getCloseChildrenButtonClassname()
     const closeButton = element.querySelector('.close')
-    const alreadyCreated = closeButton.previousSibling.classList.contains(buttonClass)
     const existingButton = element.querySelector('.' + buttonClass)
 
     if (existingButton) {

@@ -15,7 +15,7 @@ export default class Command {
     this.command = command;
 
     // browser.html extension id
-    // Can it change?
+    // Can it ever change?
     this.browserExtensionId = 'mpognobbkildjkofajifpdfhcoklimli'; 
     this.parameters = parameters;
     this.logEnabled = true;
@@ -41,7 +41,7 @@ export default class Command {
     return port;
   }
 
-  send(callback?:ResponseCallback) {
+  send(_callback?:ResponseCallback) {
     let parameters = {...this.parameters, ...{command: this.command}};
 
      if (this.logEnabled) {
@@ -69,7 +69,7 @@ export default class Command {
         }
         break;
       case 'RenderAllTabs':
-        tabContainer.applyAll(node => node.renderIndentation())
+        tabContainer.applyAll(node => node.renderEverything())
         break
       case 'GetTabIndent':
         node = tabContainer.get(request.tabId);
