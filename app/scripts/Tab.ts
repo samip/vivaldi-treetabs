@@ -2,8 +2,7 @@ import {TabContainer} from './TabContainer'
 import Command from './Command'
 import Window from './Window'
 import {windowContainer} from './WindowContainer'
-
-export type NodeCallback = (node: Tab) => any
+import { NodeCallback } from './Types/NodeCallback'
 
 /*
 Represents either tab or Window's root node
@@ -38,6 +37,10 @@ export default class Tab {
   }
 
 
+  applyChildren(callback: NodeCallback): void {
+    this.children.applyAll(callback)
+  }
+
   /** Call function on every descendant (children, children of children) of Node **/
   applyDescendants(callback: NodeCallback): void {
     this.children.tabs.forEach((node:Tab) => {
@@ -46,7 +49,13 @@ export default class Tab {
     })
   }
 
-  /** Traverse to root, return distance  **/
+  /** Traverse to root, return distance / depth / indentlevel  **/
+  /* eg:
+    -a: root
+       - b: distance to root: 1
+       - c: distance to root: 1
+         - d: distance to root: 2
+  */
   calculateDistanceToRoot(): number {
     let helper = function(node:Tab, distance:number): any {
       if (node.parent) {

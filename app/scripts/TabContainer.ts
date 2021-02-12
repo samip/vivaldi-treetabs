@@ -1,8 +1,5 @@
 import Tab from './Tab'
-
-// c/p from Node.ts
-// TODO: fix duplicate definition
-export type NodeCallback = (node: Tab) => any
+import { NodeCallback } from './Types/NodeCallback'
 
 export class TabContainer {
 
@@ -91,5 +88,5 @@ export class TabContainer {
   }
 }
 
-// Contains tabs from each window
+// Contains references to all tabs from each window
 export const tabContainer = new TabContainer()

@@ -17,10 +17,6 @@ class ChromeCallbacks {
     // child tab created -> set parent and indent.
     if (tab.openerTabId) {
       const parentTab = tabContainer.get(tab.openerTabId)
-      if (!parentTab) {
-        // todo: query
-      }
-
       node.parentTo(parentTab)
       node.renderIndentation()
       console.info('Child tab', node, 'parented to', parentTab)
@@ -60,7 +56,6 @@ class ChromeCallbacks {
             }
           } else if (prev === searchBelow) {
             minIndex = prev
-            console.log('exit untouched at ', prev)
             return
           }
 
@@ -79,7 +74,6 @@ class ChromeCallbacks {
     const node = tabContainer.get(tabId)
     node.remove()
     tabContainer.remove(node)
-    // TODO: parent children
   }
 
   /*
