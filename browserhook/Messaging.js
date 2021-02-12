@@ -13,10 +13,6 @@ class Messaging {
   onConnected(port) {
     this.port = port
     this.port.onMessage.addListener(this.onReceived)
-
-    if (chrome.runtime.lastError) {
-      console.log(chrome.runtime.lastError)
-    }
     console.log('Connected to browserhook', port)
   }
 
@@ -32,7 +28,8 @@ class Messaging {
         @param tabId
         @param indentLevel - how many steps tab needs to be indentedx
        */
-      case 'IndentTab':
+      case 'TabIndent':
+        console.log(request)
         // tabcontrol.IndentTab(request.tabid, request.indentLevel)
         break
 
@@ -70,6 +67,7 @@ class Messaging {
 
       default:
         console.error('Invalid command')
+        console.log(request)
         // invalid command
         break
     }
@@ -81,28 +79,9 @@ class Messaging {
       return
     }
 
-    console.log('sending msg', msg)
-    // this.port.postMessage(msg)
+    this.port.postMessage(msg)
     if (chrome.runtime.lastError) {
-      log('Caught', LogType.info)
       console.log(chrome.runtime.lastError)
     }
   }
 }
-
-
-
-
-
-console.log('Browserhook loaded')
-const messaging = new Messaging()
-const vivaldiUI = new VivaldiUIObserver()
-vivaldiUI.tabContainer.addCallback('onCreated', (element) => messaging.send({command: 'refreshTree' }))
-
-vivaldiUI.tab.addCallback('onCreated', (element, tabId) => {
-
-  messaging.send( { command: 'indentTab', tabId: tabId })
-})
-
-messaging.init()
-vivaldiUI.init()
