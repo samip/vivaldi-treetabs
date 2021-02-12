@@ -3,18 +3,18 @@ import Command from './Command'
 import Window from './Window'
 import {windowContainer} from './WindowContainer'
 
-export type NodeCallback = (node: Node) => any
+export type NodeCallback = (node: Tab) => any
 
 /*
 Represents either tab or Window's root node
 */
 
-export default class Node {
+export default class Tab {
 
   id: number
   tab: chrome.tabs.Tab // https://developer.chrome.com/extensions/tabs
   children: TabContainer
-  parent: Node
+  parent: Tab
   initialIndex: number // Index (from top to bottom) of tab when it was created
   isRoot: boolean
 
@@ -40,7 +40,7 @@ export default class Node {
 
   /** Call function on every descendant (children, children of children) of Node **/
   applyDescendants(callback: NodeCallback): void {
-    this.children.tabs.forEach((node:Node) => {
+    this.children.tabs.forEach((node:Tab) => {
       callback(node)
       return node.applyDescendants(callback)
     })
@@ -48,7 +48,7 @@ export default class Node {
 
   /** Traverse to root, return distance  **/
   calculateDistanceToRoot(): number {
-    let helper = function(node:Node, distance:number): any {
+    let helper = function(node:Tab, distance:number): any {
       if (node.parent) {
         if (node.parent.isRoot) {
           return helper(node.parent, distance)
@@ -82,7 +82,7 @@ export default class Node {
   }
 
   /** Set parent **/
-  parentTo(parent: Node): Node {
+  parentTo(parent: Tab): Tab {
     // Add node to new parent's child list
     parent.children.add(this)
     this.parent = parent
@@ -97,7 +97,7 @@ export default class Node {
   /** Remove tab and parent it's children to own parent **/
   remove(): void {
     // Parent removed tab's children to own parent and redraw
-    this.applyDescendants((child:Node) => {
+    this.applyDescendants((child:Tab) => {
       // Reparent direct children
       if (child.parent.id === this.id) {
         child.parentTo(this.parent)
@@ -115,7 +115,7 @@ export default class Node {
   }
 
   removeChildren(): void {
-    this.applyDescendants((child:Node) => {
+    this.applyDescendants((child:Tab) => {
       chrome.tabs.remove(child.id)
       if (chrome.runtime.lastError) {
         console.log('Error on removeChildren')

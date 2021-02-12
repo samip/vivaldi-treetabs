@@ -1,23 +1,23 @@
-import Node from './Node'
+import Tab from './Tab'
 
 // c/p from Node.ts
 // TODO: fix duplicate definition
-export type NodeCallback = (node: Node) => any
+export type NodeCallback = (node: Tab) => any
 
 export class TabContainer {
 
   // Tabs mapped by id
-  tabs: Map<number, Node>
+  tabs: Map<number, Tab>
 
   constructor() {
-    this.tabs = new Map<number, Node>()
+    this.tabs = new Map<number, Tab>()
   }
 
-  add(node:Node): void {
+  add(node:Tab): void {
     this.tabs.set(node.id, node)
   }
 
-  get(id:number): Node {
+  get(id:number): Tab {
     const node = this.tabs.get(id)
     if (!node) {
       throw new Error('Invalid access for node id' + id)
@@ -26,16 +26,16 @@ export class TabContainer {
   }
 
   applyAll(callback: NodeCallback): void {
-    this.tabs.forEach((node:Node) => {
+    this.tabs.forEach((node:Tab) => {
       callback(node)
     })
   }
 
-  getFirst(): Node {
+  getFirst(): Tab {
     return this.tabs.values().next().value
   }
 
-  remove(node:Node) {
+  remove(node:Tab) {
     if (this.tabs.get(node.id)) {
       this.tabs.delete(node.id)
     }
@@ -47,10 +47,10 @@ export class TabContainer {
 
   // Create nodes and their relationships
   initFromArray(tabs:chrome.tabs.Tab[]) {
-    const parentQueue = new Map<number, Array<Node>>()
+    const parentQueue = new Map<number, Array<Tab>>()
 
     tabs.forEach((tab:chrome.tabs.Tab) => {
-      const tabObj = new Node(tab)
+      const tabObj = new Tab(tab)
 
       // Parent already in container -> set parent normally
       if (tab.openerTabId) {
@@ -82,7 +82,7 @@ export class TabContainer {
       const queueForThis = parentQueue.get(tabObj.id)
       if (queueForThis) {
         // Children were created first -> parent them
-        queueForThis.forEach((node:Node) => {
+        queueForThis.forEach((node:Tab) => {
           node.parentTo(tabObj)
         })
       }

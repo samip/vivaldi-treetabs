@@ -1,5 +1,5 @@
 import 'chromereload/devonly'
-import Node from './Node'
+import Tab from './Tab'
 import {tabContainer} from './TabContainer'
 import {windowContainer} from './WindowContainer'
 import Window from './Window'
@@ -11,7 +11,7 @@ class ChromeCallbacks {
   }
 
   static onTabCreated(tab: chrome.tabs.Tab) {
-    const node = new Node(tab)
+    const node = new Tab(tab)
     tabContainer.add(node)
 
     // child tab created -> set parent and indent.
@@ -35,8 +35,8 @@ class ChromeCallbacks {
   }
 
   static onTabMoved(tabId:number, moveInfo:chrome.tabs.TabMoveInfo) {
-    const node:Node = tabContainer.get(tabId)
-    const root:Node = node.getWindow().root
+    const node:Tab = tabContainer.get(tabId)
+    const root:Tab = node.getWindow().root
 
     // whether this was final move event made by Vivaldi
     const correctEvent = node.initialIndex === moveInfo.fromIndex
@@ -75,13 +75,12 @@ class ChromeCallbacks {
     }
   }
 
-
   static onTabRemoved(tabId:number) {
     const node = tabContainer.get(tabId)
     node.remove()
     tabContainer.remove(node)
+    // TODO: parent children
   }
-
 
   /*
     Tab moved to new window -> reparent to new Window's root
@@ -98,7 +97,7 @@ class ChromeCallbacks {
    */
   static onTabDetached(tabId:number, _info:chrome.tabs.TabDetachInfo) {
     const node = tabContainer.get(tabId)
-    node.children.tabs.forEach((child: Node) => {
+    node.children.tabs.forEach((child: Tab) => {
       child.parentTo(node.parent)
       child.renderIndentation()
     })
@@ -111,7 +110,7 @@ class ChromeCallbacks {
     if (info.pinned) {
       // Tab pinned -> parent children to tab's parent
       const node = tabContainer.get(tabId)
-      node.children.tabs.forEach((child: Node) => child.parentTo(node.parent).renderIndentation())
+      node.children.tabs.forEach((child: Tab) => child.parentTo(node.parent).renderIndentation())
       // Parent tab to window root
       // TODO: fix
       node.parentTo(node.getWindow().root)
@@ -123,7 +122,7 @@ class ChromeCallbacks {
     windowContainer.add(winObj)
   }
 
-  static onWindowRemoved(windowId:number, filters:chrome.windows.WindowEventFilter|undefined) {
+  static onWindowRemoved(windowId:number, _filters:chrome.windows.WindowEventFilter|undefined) {
     const winObj = windowContainer.get(windowId)
     windowContainer.remove(winObj)
   }
