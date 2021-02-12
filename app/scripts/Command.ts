@@ -13,7 +13,10 @@ export default class Command {
 
   constructor(command:string, parameters:object) {
     this.command = command;
-    this.browserExtensionId = 'mpognobbkildjkofajifpdfhcoklimli'; // browser.html
+
+    // browser.html extension id
+    // Can it change?
+    this.browserExtensionId = 'mpognobbkildjkofajifpdfhcoklimli'; 
     this.parameters = parameters;
     this.logEnabled = true;
 
@@ -75,7 +78,11 @@ export default class Command {
       case 'GetTabIndent':
         node = tabContainer.get(request.tabId);
         if (node) {
-          port.postMessage({command: 'TabIndent', tabId: request.tabId, indent: node.depth()})
+          port.postMessage({
+            command: 'TabIndent',
+            tabId: request.tabId,
+            indent: node.depth()
+          })
         }
         break
       default:

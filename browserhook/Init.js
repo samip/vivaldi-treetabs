@@ -1,9 +1,3 @@
-
-
-
-
-
-
 console.log('Browserhook loaded')
 const messaging = new Messaging()
 const vivaldiUI = new VivaldiUIObserver()

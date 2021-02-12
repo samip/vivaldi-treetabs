@@ -17,7 +17,7 @@
   },
   "background": {
     "scripts": [
-      "scripts/background.js"
+      "scripts/Init.js"
     ]
   },
   "commands": {
