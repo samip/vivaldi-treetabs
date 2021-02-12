@@ -119,48 +119,6 @@ class ChromeCallbacks {
     windowContainer.remove(winObj);
   }
 
-  /*
-  Handle messages send from external sources set in manifest.json.
-  Current allowed sources: BrowserHook and testpage.html
-   */
-
-  static onMessageExternal(request:any, sender:any, sendResponse:any) {
-    console.log('external received in background', request, sender);
-
-    if (request.command) {
-      switch (request.command) {
-        case 'build':
-          // async. wrap in promises?
-          chrome.windows.getAll(windowContainer.initFromArray.bind(windowContainer));
-          chrome.tabs.query({}, tabContainer.initFromArray.bind(tabContainer));
-          sendResponse({'tabContainer': tabContainer, 'windowContainer': windowContainer});
-          break;
-        case 'get':
-          sendResponse({'tabContainer': tabContainer});
-          break;
-        case 'show_ids':
-          tabContainer.tabs.forEach((node:Node) => {
-            node.command('ShowId');
-          });
-          break;
-        case 'store':
-          break;
-        case 'CloseChildren':
-          console.info('Close children called from browser.html for tab-id: ' + request.tab);
-          const tabId = request.tabId;
-          const node = tabContainer.get(tabId);
-
-          if (node) {
-            node.applyDescendants((child:Node) => {
-              chrome.tabs.remove(child.id);
-            });
-          } else {
-            console.error('Trying to close children of missing tab');
-          }
-          break;
-      }
-    }
-  }
 
   /*
   Chrome extension shortcuts (not working)
@@ -184,7 +142,6 @@ chrome.windows.getAll(windowContainer.initFromArray.bind(windowContainer));
 chrome.tabs.query({}, tabContainer.initFromArray.bind(tabContainer));
 
 chrome.runtime.onMessage.addListener(ChromeCallbacks.onMessage);
-chrome.runtime.onMessageExternal.addListener(ChromeCallbacks.onMessageExternal);
 chrome.commands.onCommand.addListener(ChromeCallbacks.onCommand);
 chrome.tabs.onCreated.addListener(ChromeCallbacks.onTabCreated);
 chrome.tabs.onMoved.addListener(ChromeCallbacks.onTabMoved);
