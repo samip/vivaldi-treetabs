@@ -58,10 +58,6 @@ export default class Command {
   onReceived(request: any, port: chrome.runtime.Port) {
     console.log('External message received', request)
 
-    if (!request.command) {
-      console.error('Missing command');
-    }
-
     switch (request.command) {
       case 'CloseChildren':
         let node = tabContainer.get(request.tabId);

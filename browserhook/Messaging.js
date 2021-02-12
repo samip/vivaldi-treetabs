@@ -1,6 +1,8 @@
 class Messaging {
-  constructor() {
+  constructor(tabControl) {
     this.port = null
+    this.tabControl = tabControl
+    console.log(this.tabControl)
   }
 
   init() {
@@ -12,7 +14,7 @@ class Messaging {
 
   onConnected(port) {
     this.port = port
-    this.port.onMessage.addListener(this.onReceived)
+    this.port.onMessage.addListener(this.onReceived.bind(this))
     console.log('Connected to browserhook', port)
   }
 
@@ -20,17 +22,16 @@ class Messaging {
     Handle incoming command
   */
   onReceived(request) {
-    const tabcontrol = new TabControl()
-
+    console.log(this)
+    console.log(this.tabControl)
     switch (request.command) {
       /*
         Indents tab by <indentLevel> steps.
         @param tabId
         @param indentLevel - how many steps tab needs to be indentedx
        */
-      case 'TabIndent':
-        console.log(request)
-        // tabcontrol.IndentTab(request.tabid, request.indentLevel)
+      case 'IndentTab':
+        this.tabControl.IndentTab(request.tabId, request.indentLevel)
         break
 
       /*
@@ -39,14 +40,14 @@ class Messaging {
        * @param tabId
        */
       case 'ShowId':
-        tabcontrol.ShowId(request.tabId, request.indentLevel)
+        this.tabControl.ShowId(request.tabId, request.indentLevel)
         break
 
       /* Append attribute to tab strip. Used in debugging only.
        */
       case 'appendAttribute':
         // UNSAFE
-        tabcontrol.appendAttribute(request.tabId,
+        this.tabControl.appendAttribute(request.tabId,
           request.attribute,
           request.value)
         break
@@ -55,14 +56,14 @@ class Messaging {
        * @param TabId
        */
       case 'showCloseChildrenButton':
-        tabcontrol.showCloseChildrenButton(request.tabId)
+        this.tabControl.showCloseChildrenButton(request.tabId)
         break
 
       /* Hide 'Close child tabs' button in tab strip
        * @param TabId
        */
       case 'hideCloseChildrenButton':
-        tabcontrol.hideCloseChildrenButton(request.tabId)
+        this.tabControl.hideCloseChildrenButton(request.tabId)
         break
 
       default:

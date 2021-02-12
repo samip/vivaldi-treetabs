@@ -125,6 +125,6 @@ export default class Node {
   /** Send IndentTab command to BrowserHook **/
   renderIndentation(): void {
     const depth = this.depth();
-    // this.command('IndentTab', {'indentLevel': depth});
+    this.command('IndentTab', {'indentLevel': depth});
   }
 }

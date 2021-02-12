@@ -3,10 +3,17 @@ class TabControl {
     this.indentStep = 20
     this.indentUnit = 'px'
     this.indentAttribute = 'marginLeft'
+    this.commandQueue = {}
   }
 
+  // todo: take element as parameter
   IndentTab (tabId, indentLevel, pass) {
     const element = this.getElement(tabId)
+    if (!element) {
+      console.log('No element')
+      return this.queueTabCommand(tabId, arguments)
+    }
+
     const indentVal = (indentLevel * this.indentStep) + this.indentUnit
     if (element.parentElement && element.parentElement.classList.contains('tab-position')) {
       element.parentElement.style[this.indentAttribute] = indentVal
@@ -19,8 +26,25 @@ class TabControl {
 
   }
 
-  SetIndentStyle () {
-    console.log('SetIndentStyle not implemented')
+  queueTabCommand(tabId, argumentsObject) {
+    this.commandQueue[tabId] = this.commandQueue[tabId] || []
+    this.commandQueue[tabId].push(argumentsObject)
+    console.log('Command queued', tabId, argumentsObject)
+  }
+
+  runQueuedTabCommands(tabId, element) {
+    const commandsRun = []
+    if (!this.commandQueue[tabId]) {
+      return commandsRun
+    }
+
+    while (this.commandQueue[tabId].length) {
+      let command = this.commandQueue[tabId].shift()
+      // TODO: generic command queue
+      this.IndentTab(tabId, command[1])
+      commandsRun.push(command)
+    }
+    return commandsRun
   }
 
   appendAttribute (tabId, attribute, value) {
