@@ -1,13 +1,13 @@
 class TabControl {
   constructor () {
-    this.indentStep = 20
+    this.indentStep = 15
     this.indentUnit = 'px'
-    this.indentAttribute = 'marginLeft'
+    this.indentAttribute = 'paddingLeft'
     this.commandQueue = {}
   }
 
   // todo: take element as parameter
-  IndentTab (tabId, indentLevel, pass) {
+  IndentTab (tabId, indentLevel) {
     const element = this.getElement(tabId)
     if (!element) {
       console.log('No element')
