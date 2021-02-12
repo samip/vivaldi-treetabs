@@ -68,7 +68,7 @@ export default class Command {
           console.error('Trying to close children of missing tab');
         }
         break;
-      case 'RefreshTabTree':
+      case 'RenderAllTabs':
         tabContainer.applyAll(node => node.renderIndentation())
         break
       case 'GetTabIndent':

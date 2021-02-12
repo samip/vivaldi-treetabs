@@ -2,11 +2,10 @@ class Messaging {
   constructor(tabControl) {
     this.port = null
     this.tabControl = tabControl
-    console.log(this.tabControl)
   }
 
   init() {
-    chrome.runtime.onConnectExternal.addListener(messaging.onConnected.bind(messaging))
+    chrome.runtime.onConnectExternal.addListener(this.onConnected.bind(this))
     if (chrome.runtime.lastError) {
       console.log(chrome.runtime.lastError)
     }
@@ -75,6 +74,7 @@ class Messaging {
   }
 
   send(msg) {
+    console.log(this, 'messing:send')
     if (!this.port) {
       console.error('No connection')
       return
