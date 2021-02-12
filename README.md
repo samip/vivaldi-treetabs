@@ -20,7 +20,10 @@
 ## Hook
 `sudo ./installBrowserHook.sh` and select target Vivaldi installation.
 
+
 # Other
+Icon from https://www.cleanpng.com/png-digital-data-digitale-nachhaltigkeit-sustainabilit-5304786/
+
 `vivaldi-snapshot --load-extension=/home/sami/Documents/vivaldi-treetabs/dist/chrome/ --flag-switches-begin --debug-packed-apps --silent-debugger-extension-api --flag-switches-end`
 
 ./installBrowserHook.sh && npm run kill-browser; npm run browser
