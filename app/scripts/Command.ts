@@ -60,24 +60,24 @@ export default class Command {
 
     switch (request.command) {
       case 'CloseChildren':
-        let node = tabContainer.get(request.tabId)
+        let tab = tabContainer.get(request.tabId)
 
-        if (node) {
-          node.removeChildren()
+        if (tab) {
+          tab.removeChildren()
         } else {
           console.error('Trying to close children of missing tab')
         }
         break
       case 'RenderAllTabs':
-        tabContainer.applyAll(node => node.renderEverything())
+        tabContainer.applyAll((tab: any) => tab.renderEverything())
         break
       case 'GetTabIndent':
-        node = tabContainer.get(request.tabId)
-        if (node) {
+        tab = tabContainer.get(request.tabId)
+        if (tab) {
           port.postMessage({
             command: 'TabIndent',
             tabId: request.tabId,
-            indent: node.depth()
+            indent: tab.depth()
           })
         }
         break

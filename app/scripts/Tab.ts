@@ -2,7 +2,7 @@ import {TabContainer} from './TabContainer'
 import Command from './Command'
 import Window from './Window'
 import {windowContainer} from './WindowContainer'
-import { NodeCallback } from './Types/NodeCallback'
+import {TabCallback} from './Types/TabCallback'
 
 /*
 Represents either tab or Window's root node
@@ -17,17 +17,18 @@ export default class Tab {
   initialIndex: number // Index (from top to bottom) of tab when it was created
   isRoot: boolean
 
-  constructor(tab?: chrome.tabs.Tab) {
-    if (tab) {
-      if (tab.id) {
-        this.id = tab.id
+  constructor(chromeTab?: chrome.tabs.Tab) {
+    if (chromeTab) {
+      if (chromeTab.id) {
+        this.id = chromeTab.id
       } else {
         // "Under some circumstances a tab may not be assigned an ID for example,
         // when querying foreign tabs using the sessions API"
         // should never happen here
         throw new Error('No tab id')
       }
-      this.tab = tab
+      this.tab = chromeTab
+      this.initialIndex = chromeTab.index
     } else {
       this.isRoot = true
       this.id = 0
@@ -36,16 +37,16 @@ export default class Tab {
     this.children = new TabContainer()
   }
 
-
-  applyChildren(callback: NodeCallback): void {
+  /** Call function on every child (but not children of children) **/
+  applyChildren(callback: TabCallback): void {
     this.children.applyAll(callback)
   }
 
-  /** Call function on every descendant (children, children of children) of Node **/
-  applyDescendants(callback: NodeCallback): void {
-    this.children.tabs.forEach((node:Tab) => {
-      callback(node)
-      return node.applyDescendants(callback)
+  /** Call function on every descendant (children, children of children) **/
+  applyDescendants(callback: TabCallback): void {
+    this.children.tabs.forEach((tab: Tab) => {
+      callback(tab)
+      return tab.applyDescendants(callback)
     })
   }
 
@@ -57,12 +58,12 @@ export default class Tab {
          - d: distance to root: 2
   */
   calculateDistanceToRoot(): number {
-    let helper = function(node:Tab, distance:number): any {
-      if (node.parent) {
-        if (node.parent.isRoot) {
-          return helper(node.parent, distance)
+    let helper = function (tab: Tab, distance: number): any {
+      if (tab.parent) {
+        if (tab.parent.isRoot) {
+          return helper(tab.parent, distance)
         } else {
-          return helper(node.parent, ++distance)
+          return helper(tab.parent, ++distance)
         }
       } else {
         return distance
@@ -73,7 +74,7 @@ export default class Tab {
   }
 
   /** Send tab specific command to Browserhook **/
-  command(command: string, parameters:any={}): void {
+  command(command: string, parameters: any = {}): void {
     parameters['tabId'] = this.id
     const cmd = new Command(command, parameters)
     cmd.send()
@@ -92,7 +93,7 @@ export default class Tab {
 
   /** Set parent **/
   parentTo(parent: Tab): Tab {
-    // Add node to new parent's child list
+    // Add tab to new parent's child list
     parent.children.add(this)
     this.parent = parent
     // Has children now -> show close children button
@@ -106,7 +107,7 @@ export default class Tab {
   /** Remove tab and parent it's children to own parent **/
   remove(): void {
     // Parent removed tab's children to own parent and redraw
-    this.applyDescendants((child:Tab) => {
+    this.applyDescendants((child: Tab) => {
       // Reparent direct children
       if (child.parent.id === this.id) {
         child.parentTo(this.parent)
@@ -124,7 +125,7 @@ export default class Tab {
   }
 
   removeChildren(): void {
-    this.applyDescendants((child:Tab) => {
+    this.applyDescendants((child: Tab) => {
       chrome.tabs.remove(child.id)
       if (chrome.runtime.lastError) {
         console.log('Error on removeChildren')
@@ -132,6 +133,7 @@ export default class Tab {
     })
   }
 
+  /** Called on each tab after tab container re-appears **/
   renderEverything(): void {
     if (!this.children.isEmpty()) {
       this.command('ShowCloseChildrenButton')

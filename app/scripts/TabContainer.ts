@@ -1,5 +1,5 @@
 import Tab from './Tab'
-import { NodeCallback } from './Types/NodeCallback'
+import {TabCallback} from './Types/TabCallback'
 
 export class TabContainer {
 
@@ -10,21 +10,21 @@ export class TabContainer {
     this.tabs = new Map<number, Tab>()
   }
 
-  add(node:Tab): void {
-    this.tabs.set(node.id, node)
+  add(tab:Tab): void {
+    this.tabs.set(tab.id, tab)
   }
 
   get(id:number): Tab {
-    const node = this.tabs.get(id)
-    if (!node) {
-      throw new Error('Invalid access for node id' + id)
+    const tab = this.tabs.get(id)
+    if (!tab) {
+      throw new Error('Invalid access for tab id' + id)
     }
-    return node
+    return tab
   }
 
-  applyAll(callback: NodeCallback): void {
-    this.tabs.forEach((node:Tab) => {
-      callback(node)
+  applyAll(callback: TabCallback): void {
+    this.tabs.forEach((tab:Tab) => {
+      callback(tab)
     })
   }
 
@@ -32,9 +32,9 @@ export class TabContainer {
     return this.tabs.values().next().value
   }
 
-  remove(node:Tab) {
-    if (this.tabs.get(node.id)) {
-      this.tabs.delete(node.id)
+  remove(tab:Tab) {
+    if (this.tabs.get(tab.id)) {
+      this.tabs.delete(tab.id)
     }
   }
 
@@ -42,7 +42,7 @@ export class TabContainer {
     return this.tabs.size === 0
   }
 
-  // Create nodes and their relationships
+  // Create tabs and their relationships
   initFromArray(tabs:chrome.tabs.Tab[]) {
     const parentQueue = new Map<number, Array<Tab>>()
 
@@ -70,7 +70,7 @@ export class TabContainer {
           }
         }
       }
-      // Top level tab -> parent to window's root node
+      // Top level tab -> parent to window's root tab
       else {
         const window = tabObj.getWindow()
         tabObj.parentTo(window.root)
@@ -79,8 +79,8 @@ export class TabContainer {
       const queueForThis = parentQueue.get(tabObj.id)
       if (queueForThis) {
         // Children were created first -> parent them
-        queueForThis.forEach((node:Tab) => {
-          node.parentTo(tabObj)
+        queueForThis.forEach((tab:Tab) => {
+          tab.parentTo(tabObj)
         })
       }
       this.add(tabObj)

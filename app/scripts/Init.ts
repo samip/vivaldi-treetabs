@@ -6,40 +6,35 @@ import Window from './Window'
 
 class ChromeCallbacks {
 
-  static onMessage(message: any, sender: any, sendResponse: any) {
-    console.log('onMessage', message, sender, sendResponse)
-  }
-
-  static onTabCreated(tab: chrome.tabs.Tab) {
-    const node = new Tab(tab)
-    tabContainer.add(node)
+  static onTabCreated(chromeTab: chrome.tabs.Tab) {
+    const tab = new Tab(chromeTab)
+    tabContainer.add(tab)
 
     // child tab created -> set parent and indent.
-    if (tab.openerTabId) {
-      const parentTab = tabContainer.get(tab.openerTabId)
-      node.parentTo(parentTab)
-      node.renderIndentation()
-      console.info('Child tab', node, 'parented to', parentTab)
+    if (chromeTab.openerTabId) {
+      const parentTab = tabContainer.get(chromeTab.openerTabId)
+      tab.parentTo(parentTab)
+      tab.renderIndentation()
+      console.info('Child tab', tab, 'parented to', parentTab)
     }
     // top level tab -> parent to window's root node
     else {
-      const root = node.getWindow().root
-      node.parentTo(root)
-      node.initialIndex = tab.index
-      console.info('Root tab ', node, ' parented to ', root)
+      const root = tab.getWindow().root
+      tab.parentTo(root)
+      console.info('Root tab ', tab, ' parented to ', root)
     }
   }
 
-  static onTabMoved(tabId:number, moveInfo:chrome.tabs.TabMoveInfo) {
-    const node:Tab = tabContainer.get(tabId)
-    const root:Tab = node.getWindow().root
+  static onTabMoved(tabId:number, info:chrome.tabs.TabMoveInfo) {
+    const tab:Tab = tabContainer.get(tabId)
+    const root:Tab = tab.getWindow().root
 
     // whether this was final move event made by Vivaldi
-    const correctEvent = node.initialIndex === moveInfo.fromIndex
+    const correctEvent = tab.initialIndex === info.fromIndex
 
     /// top level tab needs to repositioned outside existing branches
-    if (node.parent.isRoot && correctEvent) {
-      const searchBelow = moveInfo.toIndex // search for spot below created tab
+    if (tab.parent.isRoot && correctEvent) {
+      const searchBelow = info.toIndex // search for spot below created tab
       let processed = 0
       let minIndex:number
 
@@ -71,43 +66,43 @@ class ChromeCallbacks {
   }
 
   static onTabRemoved(tabId:number) {
-    const node = tabContainer.get(tabId)
-    node.remove()
-    tabContainer.remove(node)
+    const tab = tabContainer.get(tabId)
+    tab.remove()
+    tabContainer.remove(tab)
   }
 
   /*
     Tab moved to new window -> reparent to new Window's root
    */
   static onTabAttached(tabId:number, info:chrome.tabs.TabAttachInfo) {
-    const node = tabContainer.get(tabId)
+    const tab = tabContainer.get(tabId)
     const newWindow = windowContainer.get(info.newWindowId)
-    node.parentTo(newWindow.root)
-    node.renderIndentation()
+    tab.parentTo(newWindow.root)
+    tab.renderIndentation()
   }
 
   /*
-  TODO: move children to new window with their parent?
+    TODO: move children to new window with their parent?
    */
   static onTabDetached(tabId:number, _info:chrome.tabs.TabDetachInfo) {
-    const node = tabContainer.get(tabId)
-    node.children.tabs.forEach((child: Tab) => {
-      child.parentTo(node.parent)
+    const tab = tabContainer.get(tabId)
+    tab.children.tabs.forEach((child: Tab) => {
+      child.parentTo(tab.parent)
       child.renderIndentation()
     })
   }
 
   /*
-  https://developer.chrome.com/docs/extensions/reference/tabs/#event-onUpdated
+    https://developer.chrome.com/docs/extensions/reference/tabs/#event-onUpdated
   */
   static onTabUpdated(tabId:number, info:chrome.tabs.TabChangeInfo) {
     if (info.pinned) {
       // Tab pinned -> parent children to tab's parent
-      const node = tabContainer.get(tabId)
-      node.children.tabs.forEach((child: Tab) => child.parentTo(node.parent).renderIndentation())
+      const tab = tabContainer.get(tabId)
+      tab.children.tabs.forEach((child: Tab) => child.parentTo(tab.parent).renderIndentation())
       // Parent tab to window root
-      // TODO: fix
-      node.parentTo(node.getWindow().root)
+      // TODO: fix problems when an intended tab is pinned
+      tab.parentTo(tab.getWindow().root)
     }
   }
 
@@ -143,7 +138,6 @@ class ChromeCallbacks {
 chrome.windows.getAll(windowContainer.initFromArray.bind(windowContainer))
 chrome.tabs.query({}, tabContainer.initFromArray.bind(tabContainer))
 
-chrome.runtime.onMessage.addListener(ChromeCallbacks.onMessage)
 chrome.commands.onCommand.addListener(ChromeCallbacks.onCommand)
 chrome.tabs.onCreated.addListener(ChromeCallbacks.onTabCreated)
 chrome.tabs.onMoved.addListener(ChromeCallbacks.onTabMoved)
