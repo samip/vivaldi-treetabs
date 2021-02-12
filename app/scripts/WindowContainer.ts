@@ -1,38 +1,38 @@
-import Window from './Window';
+import Window from './Window'
 
 class WindowContainer {
 
-  windows: Map<number,Window>; // Windows indexed by ids
+  windows: Map<number,Window> // Windows indexed by ids
 
   constructor() {
-    this.windows = new Map<number, Window>();
+    this.windows = new Map<number, Window>()
   }
 
   add(window:Window) {
-    const key = window.id;
-    this.windows.set(key, window);
+    const key = window.id
+    this.windows.set(key, window)
   }
 
   get(id:number): Window {
-    const window = this.windows.get(id);
+    const window = this.windows.get(id)
     if (!window) {
       // TODO: try to query missing window and put it into container.
-      throw new Error('WindowContainer: access to missing element. id:  ' + id);
+      throw new Error('WindowContainer: access to missing element. id:  ' + id)
     }
-    return window;
+    return window
   }
 
   remove(window:Window) {
-    this.windows.delete(window.id);
+    this.windows.delete(window.id)
   }
 
   initFromArray(windows:chrome.windows.Window[]) {
     windows.forEach((window:chrome.windows.Window) => {
-      let winObj = new Window(window);
-      this.add(winObj);
-    });
+      const winObj = new Window(window)
+      this.add(winObj)
+    })
   }
 
 }
 
-export let windowContainer = new WindowContainer();
+export const windowContainer = new WindowContainer()

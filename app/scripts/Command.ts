@@ -2,56 +2,56 @@
 Messaging to and from BrowserHook
 */
 
-import {tabContainer} from './TabContainer';
+import {tabContainer} from './TabContainer'
 
 export default class Command {
-  command: string;
-  browserExtensionId: string;
-  parameters: object;
-  port: chrome.runtime.Port;
-  logEnabled: boolean;
+  command: string
+  browserExtensionId: string
+  parameters: object
+  port: chrome.runtime.Port
+  logEnabled: boolean
 
   constructor(command:string, parameters:object) {
-    this.command = command;
+    this.command = command
 
     // browser.html extension id
     // Can it ever change?
-    this.browserExtensionId = 'mpognobbkildjkofajifpdfhcoklimli'; 
-    this.parameters = parameters;
-    this.logEnabled = true;
+    this.browserExtensionId = 'mpognobbkildjkofajifpdfhcoklimli' 
+    this.parameters = parameters
+    this.logEnabled = true
 
     if (!this.port) {
       try {
-        this.port = this.connect();
-        this.port.onMessage.addListener(this.onReceived);
+        this.port = this.connect()
+        this.port.onMessage.addListener(this.onReceived)
       } catch(e) {
-        throw e;
+        throw e
       }
     }
   }
 
   connect(): chrome.runtime.Port {
-    const port = chrome.runtime.connect(this.browserExtensionId);
+    const port = chrome.runtime.connect(this.browserExtensionId)
 
     if (chrome.runtime.lastError) {
       throw new Error('Connect failed to browser.html. ' +
-        'Is browserhook installed? chrome.runtime.lastError: ' + chrome.runtime.lastError);
+        'Is browserhook installed? chrome.runtime.lastError: ' + chrome.runtime.lastError)
     }
 
-    return port;
+    return port
   }
 
   send(_callback?:ResponseCallback) {
-    let parameters = {...this.parameters, ...{command: this.command}};
+    let parameters = {...this.parameters, ...{command: this.command}}
 
      if (this.logEnabled) {
-      console.info('Sending command to extension: ' + this.browserExtensionId);
-      console.table(parameters);
+      console.info('Sending command to extension: ' + this.browserExtensionId)
+      console.table(parameters)
     }
 
-    this.port.postMessage(parameters);
+    this.port.postMessage(parameters)
     if (chrome.runtime.lastError) {
-      throw new Error('postMessage error: ' + chrome.runtime.lastError);
+      throw new Error('postMessage error: ' + chrome.runtime.lastError)
     }
   }
 
@@ -60,19 +60,19 @@ export default class Command {
 
     switch (request.command) {
       case 'CloseChildren':
-        let node = tabContainer.get(request.tabId);
+        let node = tabContainer.get(request.tabId)
 
         if (node) {
-          node.removeChildren();
+          node.removeChildren()
         } else {
-          console.error('Trying to close children of missing tab');
+          console.error('Trying to close children of missing tab')
         }
-        break;
+        break
       case 'RenderAllTabs':
         tabContainer.applyAll(node => node.renderEverything())
         break
       case 'GetTabIndent':
-        node = tabContainer.get(request.tabId);
+        node = tabContainer.get(request.tabId)
         if (node) {
           port.postMessage({
             command: 'TabIndent',
@@ -82,12 +82,12 @@ export default class Command {
         }
         break
       default:
-        console.error('Unknown command from browserhook', request.command);
+        console.error('Unknown command from browserhook', request.command)
     }
 
   }
 
 }
 // export type MessageResponse = (message:any, port:Port) => void
-export type ResponseCallback = (response: any) => any;
-export type cb = (message: any, port: chrome.runtime.Port) => void;
+export type ResponseCallback = (response: any) => any
+export type cb = (message: any, port: chrome.runtime.Port) => void
