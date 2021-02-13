@@ -7,6 +7,6 @@ import args from './lib/args'
 gulp.task('images', () => {
   return gulp.src('app/images/**/*')
     .pipe(gulpif(args.production, imagemin()))
-    .pipe(gulp.dest(`dist/${args.vendor}/images`))
+    .pipe(gulp.dest(`dist/extension/images`))
     .pipe(gulpif(args.watch, livereload()))
 })

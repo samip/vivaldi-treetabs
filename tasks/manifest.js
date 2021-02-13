@@ -22,6 +22,6 @@ gulp.task('manifest', () => {
         2 /* whitespace */
       )
     )
-    .pipe(gulp.dest(`dist/${args.vendor}`))
+    .pipe(gulp.dest(`dist/extension`))
     .pipe(gulpif(args.watch, livereload()))
 })

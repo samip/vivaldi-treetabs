@@ -1,8 +1,8 @@
 {
-  "name": "vivaldi-tabs",
+  "name": "Vivaldi Tree Tabs",
   "private": true,
-  "version": "2.0.0",
-  "description": "Vivaldi tab extension",
+  "version": "0.1.0",
+  "description": "Vivaldi tree tab extension",
   "scripts": {
     "start": "npm run dev:chrome",
     "build": "npm run build:chrome",
@@ -10,7 +10,7 @@
     "dev": "npm run dev:chrome",
     "dev:chrome": "gulp --watch --vendor=chrome",
     "lint": "standard",
-    "browser": "vivaldi-snapshot http://localhost:2012 --load-extension=dist/chrome/ --remote-debugging-port=2012 --flag-switches-begin --debug-packed-apps --silent-debugger-extension-api --flag-switches-end",
+    "browser": "vivaldi-snapshot http://localhost:2012 --load-extension=dist/extension --remote-debugging-port=2012 --flag-switches-begin --debug-packed-apps --silent-debugger-extension-api --flag-switches-end",
     "kill-browser": "pkill -f vivaldi-snapshot"
   },
   "standard": {
