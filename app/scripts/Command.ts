@@ -55,6 +55,7 @@ export default class Command {
     }
   }
 
+  /** Commands received from browserhook **/
   onReceived(request: any, port: chrome.runtime.Port) {
     console.log('External message received', request)
 
@@ -72,6 +73,7 @@ export default class Command {
         tabContainer.applyAll((tab: any) => tab.renderEverything())
         break
       case 'GetTabIndent':
+        // Not used
         tab = tabContainer.get(request.tabId)
         if (tab) {
           port.postMessage({
@@ -84,7 +86,6 @@ export default class Command {
       default:
         console.error('Unknown command from browserhook', request.command)
     }
-
   }
 
 }

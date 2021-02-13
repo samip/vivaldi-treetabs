@@ -31,23 +31,6 @@ class Messaging {
         this.tabControl.IndentTab(request.tabId, request.indentLevel)
         break
 
-      /*
-       * Show tab's id next to it's title. Used in debugging only.
-       *
-       * @param tabId
-       */
-      case 'ShowId':
-        this.tabControl.ShowId(request.tabId, request.indentLevel)
-        break
-
-      /* Append attribute to tab strip. Used in debugging only.
-       */
-      case 'appendAttribute':
-        // UNSAFE
-        this.tabControl.appendAttribute(request.tabId,
-          request.attribute,
-          request.value)
-        break
 
       /* Show or create 'Close child tabs' button in tab strip
        * @param TabId
@@ -64,9 +47,7 @@ class Messaging {
         break
 
       default:
-        console.error('Invalid command')
-        console.log(request)
-        // invalid command
+        console.error('Invalid command: ' + request.command)
         break
     }
   }
@@ -74,13 +55,11 @@ class Messaging {
   send(msg) {
     if (this.port) {
       this.port.postMessage(msg)
-      console.log('Send', msg)
       if (chrome.runtime.lastError) {
         console.log(chrome.runtime.lastError)
       }
     } else {
-      console.log(this)
-      console.error('Trying to send without connection', msg)
+      console.error('Trying to send message without connection', msg)
     }
   }
 }

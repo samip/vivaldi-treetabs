@@ -18,9 +18,9 @@ class TabControl {
     if (element.parentElement && element.parentElement.classList.contains('tab-position')) {
       element.parentElement.style[this.indentAttribute] = indentVal
     } else {
+      // Probably broken by Vivaldi update
       console.error('Broken by update')
       console.error(element.parentElement)
-      // Probably broken by update
     }
 
   }
@@ -46,36 +46,9 @@ class TabControl {
     return commandsRun
   }
 
-  appendAttribute (tabId, attribute, value) {
-    const element = this.getElement(tabId)
-    const oldValue = element.getAttribute(attribute)
-    element.setAttribute(attribute, oldValue + '' + value)
-  }
-
   setAttribute (tabId, attribute, value) {
     const element = this.getElement(tabId)
     element.setAttribute(attribute, value)
-  }
-
-  ShowId (tabId) {
-    this.SetText(tabId, tabId)
-  }
-
-  SetText (tabId, text) {
-    const element = this.getElement(tabId)
-
-    if (!element) {
-      console.log('Missing element for tabId' + tabId)
-      return
-    }
-    const oldTitle = element.querySelector('.title')
-    const oldCustom = oldTitle.querySelector('.custom-title')
-
-    if (oldCustom) {
-      oldCustom.innerText = text
-    } else {
-      oldTitle.innerHTML = '<span class="custom-title">' + text + '</span>' + oldTitle.innerHTML
-    }
   }
 
   showRefreshViewButton () {
@@ -102,6 +75,7 @@ class TabControl {
   showCloseChildrenButton (tabId) {
     const element = this.getElement(tabId)
     const buttonClass = TabControl.getCloseChildrenButtonClassname()
+    // TODO: can crash
     const closeButton = element.querySelector('.close')
     const existingButton = element.querySelector('.' + buttonClass)
 
