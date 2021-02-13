@@ -5,6 +5,7 @@ gulp.task('build', gulpSequence(
   'clean', [
     'manifest',
     'images',
+    'locales',
     'scripts',
     'hook',
     'chromereload'

@@ -6,6 +6,7 @@ gulp.task('dist', gulpSequence(
     'manifest',
     'images',
     'scripts',
+    'locales',
     'hook',
     'instruction',
     'pack'
