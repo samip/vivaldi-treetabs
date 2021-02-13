@@ -1,7 +1,7 @@
 class Messaging {
   constructor(tabControl) {
     this.port = null
-    this.tabControl = tabControl
+    this.uiControl = tabControl
   }
 
   init() {
@@ -22,33 +22,34 @@ class Messaging {
   */
   onReceived(request) {
     switch (request.command) {
-      /*
-        Indents tab by <indentLevel> steps.
-        @param tabId
-        @param indentLevel - how many steps tab needs to be indentedx
-       */
-      case 'IndentTab':
-        this.tabControl.IndentTab(request.tabId, request.indentLevel)
-        break
+    /*
+      Indents tab by <indentLevel> steps.
+      @param tabId
+      @param indentLevel - how many steps tab needs to be indentedx
+     */
+    case 'IndentTab':
+      this.uiControl.tab(request.tabId).indentTab(request.indentLevel)
+      break
 
 
-      /* Show or create 'Close child tabs' button in tab strip
-       * @param TabId
-       */
-      case 'ShowCloseChildrenButton':
-        this.tabControl.showCloseChildrenButton(request.tabId)
-        break
+    /* Show or create 'Close child tabs' button in tab strip
+     * @param TabId
+     */
+    case 'ShowCloseChildrenButton':
+      this.uiControl.tab(request.tabId).showCloseChildrenButton()
+      break
 
-      /* Hide 'Close child tabs' button in tab strip
-       * @param TabId
-       */
-      case 'HideCloseChildrenButton':
-        this.tabControl.hideCloseChildrenButton(request.tabId)
-        break
+    /* Hide 'Close child tabs' button in tab strip
+     * @param TabId
+     */
+    case 'HideCloseChildrenButton':
+      let a = this.uiControl.tab(request.tabId).hideCloseChildrenButton()
+      console.log(a)
+      break
 
-      default:
-        console.error('Invalid command: ' + request.command)
-        break
+    default:
+      console.error('Invalid command: ' + request.command)
+      break
     }
   }
 

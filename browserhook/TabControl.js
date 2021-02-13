@@ -1,54 +1,155 @@
-class TabControl {
-  constructor () {
+class TabCommand {
+  constructor (tabId, element) {
+    this.tabId = tabId
+    this.element = element
+    this.messagingFunction = null
+    this.queue = []
+
     this.indentStep = 15
     this.indentUnit = 'px'
     this.indentAttribute = 'paddingLeft'
-    this.commandQueue = {}
   }
 
-  // todo: take element as parameter
-  IndentTab (tabId, indentLevel) {
-    const element = this.getElement(tabId)
-    if (!element) {
-      console.log('No element')
-      return this.queueTabCommand(tabId, arguments)
+  setMessagingFunction(messagingFunction) {
+    // Used to send messages to the extension
+    // usage: this.messagingFunction({command: 'closeChildTabs', tabId: 5})
+    this.messagingFunction = messagingFunction
+  }
+
+  element(element) {
+    this.element = element
+    return this
+  }
+
+  runQueuedCommands(element) {
+    this.element = element
+    const queuedCommands = []
+    let cmd = null
+    while (cmd = this.queue.shift()) {
+      this[cmd.command](cmd.args)
+      queuedCommands.push(cmd)
+    }
+
+    return queuedCommands
+  }
+
+  queueCommand(command, args) {
+    const argsArray = []
+    for (let i = 0; i < args.length; i++) {
+      argsArray.push(args[i])
+    }
+    this.queue.push({
+      command: command,
+      args: argsArray
+    })
+
+    return this
+  }
+
+  messagingFunctionValid() {
+    return this.messagingFunction && typeof this.messagingFunction === 'function'
+  }
+
+  // --------------
+  // Tab UI methods
+  // --------------
+
+  indentTab (indentLevel) {
+    if (!this.element) {
+      return this.queueCommand('indentTab', arguments)
     }
 
     const indentVal = (indentLevel * this.indentStep) + this.indentUnit
-    if (element.parentElement && element.parentElement.classList.contains('tab-position')) {
-      element.parentElement.style[this.indentAttribute] = indentVal
+    if (this.element.parentElement && this.element.parentElement.classList.contains('tab-position')) {
+      this.element.parentElement.style[this.indentAttribute] = indentVal
+      return this
     } else {
       // Probably broken by Vivaldi update
-      console.error('Broken by update')
-      console.error(element.parentElement)
+      console.error('Broken by update. Raise issue in https://github.com/samip/vivaldi-treetabs')
     }
-
   }
 
-  queueTabCommand(tabId, argumentsObject) {
-    this.commandQueue[tabId] = this.commandQueue[tabId] || []
-    this.commandQueue[tabId].push(argumentsObject)
-    console.log('Command queued', tabId, argumentsObject)
-  }
-
-  runQueuedTabCommands(tabId, element) {
-    const commandsRun = []
-    if (!this.commandQueue[tabId]) {
-      return commandsRun
+  showCloseChildrenButton() {
+    if (!this.messagingFunctionValid()) {
+      console.error('Skipping showCloseChildrenButton... invalid messageFunction')
+      return this
     }
 
-    while (this.commandQueue[tabId].length) {
-      let command = this.commandQueue[tabId].shift()
-      // TODO: generic command queue
-      this.IndentTab(tabId, command[1])
-      commandsRun.push(command)
+    if (!this.element) {
+      return this.queueCommand('showCloseChildrenButton', arguments)
     }
-    return commandsRun
+
+    const closeButton = this.element.querySelector('.close')
+    const buttonClass = 'close-children'
+    const existingButton = this.element.querySelector('.' + buttonClass)
+
+    if (existingButton) {
+      existingButton.style.visibility = 'initial'
+      return this
+    }
+
+    const closeChildrenButton = document.createElement('button')
+    closeChildrenButton.title = 'Close child tabs'
+    closeChildrenButton.classList.add('close')
+    closeChildrenButton.classList.add(buttonClass)
+    closeChildrenButton.innerHTML = TabCommand.getCloseChildrenButtonSVG()
+
+    closeChildrenButton.addEventListener('click', (_event) => {
+      console.log(this)
+      this.messagingFunction({command: 'CloseChildren', tabId: this.tabId})
+    })
+    closeButton.parentNode.insertBefore(closeChildrenButton, closeButton)
+    return this
   }
 
-  setAttribute (tabId, attribute, value) {
-    const element = this.getElement(tabId)
-    element.setAttribute(attribute, value)
+  hideCloseChildrenButton() {
+    if (!this.element) {
+      return this.queueCommand('hideCloseChildrenButton', arguments)
+    }
+    const buttonClass = 'close-children'
+    const closeChildrenButton = this.element.querySelector('.' + buttonClass)
+    if (closeChildrenButton) {
+      closeChildrenButton.style.visibility = 'hidden'
+    }
+    return this
+  }
+
+  /// icon for close children button. Vivaldi's close tab icon + three circles
+  static getCloseChildrenButtonSVG() {
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
+            <path d="M13.5 6l-1.4-1.4-3.1 3-3.1-3L4.5 6l3.1 3.1-3 2.9 1.5 1.4L9 10.5l2.9 2.9 1.5-1.4-3-2.9"></path>
+            <circle
+             cx="5.5"
+             cy="15.8"
+             r="1.5" />
+            <circle
+             cx="9"
+             cy="15.8"
+             r="1.5" />
+            <circle
+             cx="12.394068"
+             cy="15.8"
+             r="1.5" />
+          </svg>`
+  }
+}
+
+class UIController {
+  constructor () {
+    this.tabs = {}
+    this.messagingFunction = null
+  }
+
+  setMessagingFunction(messagingFunction) {
+    this.messagingFunction = messagingFunction
+  }
+
+  tab(tabId) {
+    if (!this.tabs[tabId]) {
+      this.tabs[tabId] = new TabCommand(tabId, this.getElement(tabId))
+      this.tabs[tabId].setMessagingFunction(this.messagingFunction)
+    }
+    return this.tabs[tabId]
   }
 
   showRefreshViewButton () {
@@ -72,63 +173,6 @@ class TabControl {
     target.appendChild(button)
   }
 
-  showCloseChildrenButton (tabId) {
-    const element = this.getElement(tabId)
-    const buttonClass = TabControl.getCloseChildrenButtonClassname()
-    // TODO: can crash
-    const closeButton = element.querySelector('.close')
-    const existingButton = element.querySelector('.' + buttonClass)
-
-    if (existingButton) {
-      existingButton.style.visibility = 'initial'
-    } else {
-      let closeChildrenButton = document.createElement('button')
-      closeChildrenButton.title = 'Close child tabs'
-      closeChildrenButton.classList.add('close')
-      closeChildrenButton.classList.add(buttonClass)
-      closeChildrenButton.innerHTML = TabControl.getCloseChildrenButtonSVG()
-
-      closeChildrenButton.addEventListener('click', (event) => {
-        messaging.send({ command: 'CloseChildren', tabId: tabId  })
-      })
-      closeButton.parentNode.insertBefore(closeChildrenButton, closeButton) // insert closeChildrenButton before the 'close tab' button
-    }
-  }
-
-  hideCloseChildrenButton (tabId) {
-    const element = this.getElement(tabId)
-    const buttonClass = TabControl.getCloseChildrenButtonClassname()
-    const button = element.querySelector('.' + buttonClass)
-
-    if (button) {
-      button.style.visibility = 'hidden'
-    }
-  }
-
-  static getCloseChildrenButtonClassname() {
-    return 'close-children'
-  }
-
-  /// icon for close children button. Vivaldi's close tab icon + three circles
-  static getCloseChildrenButtonSVG() {
-    return `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
-            <path d="M13.5 6l-1.4-1.4-3.1 3-3.1-3L4.5 6l3.1 3.1-3 2.9 1.5 1.4L9 10.5l2.9 2.9 1.5-1.4-3-2.9"></path>
-            <circle
-             cx="5.5"
-             cy="15.8"
-             r="1.5" />
-            <circle
-             cx="9"
-             cy="15.8"
-             r="1.5" />
-            <circle
-             cx="12.394068"
-             cy="15.8"
-             r="1.5" />
-          </svg>`
-  }
-
-  // The dom element for tab button
   getElement (tabId) {
     return document.getElementById('tab-' + tabId)
   }
