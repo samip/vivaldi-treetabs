@@ -1,7 +1,7 @@
 {
   "name": "vivaldi-tabs",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Vivaldi tab extension",
   "scripts": {
     "start": "npm run dev:chrome",
