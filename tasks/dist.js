@@ -12,4 +12,3 @@ gulp.task('dist', gulpSequence(
     'pack'
   ]
 ))
-

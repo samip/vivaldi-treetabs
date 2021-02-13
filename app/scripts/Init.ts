@@ -1,4 +1,4 @@
-import 'chromereload/devonly'
+import 'chromereload/devonly' // Remove this before building
 import Tab from './Tab'
 import {tabContainer} from './TabContainer'
 import {windowContainer} from './WindowContainer'
@@ -38,6 +38,7 @@ class ChromeCallbacks {
 
       // This lags sometimes.
       // TODO: keep track of tab order to avoid api call?
+      // TODO: Figure out what this does and rewrite
       root.children.tabs.forEach((item) => {
         // get current index
         chrome.tabs.get(item.id, (tab:chrome.tabs.Tab) => {
@@ -99,19 +100,20 @@ class ChromeCallbacks {
       const tab = tabContainer.get(tabId)
       tab.children.tabs.forEach((child: Tab) => child.parentTo(tab.parent).renderIndentation())
       // Parent tab to window root
+
       // TODO: fix problems when an intended tab is pinned
       tab.parentTo(tab.getWindow().root)
     }
   }
 
-  static onWindowCreated(window:chrome.windows.Window) {
-    const winObj = new Window(window)
-    windowContainer.add(winObj)
+  static onWindowCreated(chromeWindow:chrome.windows.Window) {
+    const window = Window.init(chromeWindow)
+    windowContainer.add(window)
   }
 
   static onWindowRemoved(windowId:number, _filters:chrome.windows.WindowEventFilter|undefined) {
-    const winObj = windowContainer.get(windowId)
-    windowContainer.remove(winObj)
+    const window = windowContainer.get(windowId)
+    windowContainer.remove(window)
   }
 
 

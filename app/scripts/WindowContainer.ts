@@ -27,9 +27,9 @@ class WindowContainer {
   }
 
   initFromArray(windows:chrome.windows.Window[]) {
-    windows.forEach((window:chrome.windows.Window) => {
-      const winObj = new Window(window)
-      this.add(winObj)
+    windows.forEach((chromeWindow:chrome.windows.Window) => {
+      const window = Window.init(chromeWindow)
+      this.add(window)
     })
   }
 

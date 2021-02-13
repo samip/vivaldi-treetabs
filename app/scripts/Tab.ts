@@ -77,7 +77,7 @@ export default class Tab {
   command(command: string, parameters: any = {}): void {
     parameters['tabId'] = this.id
     const cmd = new Command(command, parameters)
-    cmd.send()
+    cmd.send(this.getWindow())
   }
 
   /** Get level of indentation required for tab **/

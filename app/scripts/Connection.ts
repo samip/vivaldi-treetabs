@@ -1,40 +1,41 @@
 export default class Connection {
 
-  private static instance: Connection
+  public port: chrome.runtime.Port
 
-  private _port: chrome.runtime.Port
-  private browserExtensionId: string
-
-  private constructor() {
-    // browser.html extension id
-    // Could this ever change?
-    this.browserExtensionId = 'mpognobbkildjkofajifpdfhcoklimli'
+  addListeners() {
+    chrome.runtime.onConnect.addListener(Connection.onConnected)
+    this.port.onDisconnect.addListener(this.onDisconnect)
+    this.port.onMessage.addListener(this.onReceived)
   }
 
-  private init(msgCallback:onMessageCallback) {
-    this._port = chrome.runtime.connect(this.browserExtensionId)
-    this._port.onMessage.addListener(msgCallback)
-    chrome.runtime.onConnect.addListener(x => console.log('Connected', x))
-    this._port.onDisconnect.addListener((p) => { console.error('Disconnect from browserhook', p) })
+  static onConnected(port: chrome.runtime.Port) {
+    console.log('Connected port', port)
+  }
+
+  onReceived(request: any) {
+    console.log('Received message', request)
+  }
+
+
+  onDisconnect(port: chrome.runtime.Port) {
+    console.log('Port disconnected', port)
+  }
+
+  /*
+   * ConnectInfo is used to set port name
+   */
+  connect(info?: chrome.runtime.ConnectInfo) {
+    const extId = 'mpognobbkildjkofajifpdfhcoklimli'
+    this.port = chrome.runtime.connect(extId, info)
+    chrome.runtime.connect(info)
 
     if (chrome.runtime.lastError) {
-      console.error('Connecting to browserhook failed' + chrome.runtime.lastError)
+      throw new Error('Connect failed to browser.html.'
+        + 'Is browserhook installed? chrome.runtime.lastError: '
+        + chrome.runtime.lastError)
     }
-    console.log(this._port)
-  }
-
-  public get port(): chrome.runtime.Port {
-    return this._port
-  }
-
-  static getConnection(msgCallback:onMessageCallback): Connection {
-    if (!Connection.instance) {
-      Connection.instance = new Connection()
-      Connection.instance.init(msgCallback)
-    }
-    return Connection.instance
+    this.addListeners()
   }
 }
 
 export type onMessageCallback = (message: any) => any
-

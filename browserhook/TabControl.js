@@ -10,22 +10,23 @@ class TabCommand {
     this.indentAttribute = 'paddingLeft'
   }
 
-  setMessagingFunction(messagingFunction) {
+  setMessagingFunction (messagingFunction) {
     // Used to send messages to the extension
     // usage: this.messagingFunction({command: 'closeChildTabs', tabId: 5})
     this.messagingFunction = messagingFunction
   }
 
-  element(element) {
+  element (element) {
     this.element = element
     return this
   }
 
-  runQueuedCommands(element) {
+  runQueuedCommands (element) {
     this.element = element
     const queuedCommands = []
-    let cmd = null
-    while (cmd = this.queue.shift()) {
+
+    while (this.queue.length) {
+      let cmd = this.queue.shift()
       this[cmd.command](cmd.args)
       queuedCommands.push(cmd)
     }
@@ -33,7 +34,7 @@ class TabCommand {
     return queuedCommands
   }
 
-  queueCommand(command, args) {
+  queueCommand (command, args) {
     const argsArray = []
     for (let i = 0; i < args.length; i++) {
       argsArray.push(args[i])
@@ -46,7 +47,7 @@ class TabCommand {
     return this
   }
 
-  messagingFunctionValid() {
+  messagingFunctionValid () {
     return this.messagingFunction && typeof this.messagingFunction === 'function'
   }
 
@@ -69,7 +70,7 @@ class TabCommand {
     }
   }
 
-  showCloseChildrenButton() {
+  showCloseChildrenButton () {
     if (!this.messagingFunctionValid()) {
       console.error('Skipping showCloseChildrenButton... invalid messageFunction')
       return this
@@ -95,14 +96,13 @@ class TabCommand {
     closeChildrenButton.innerHTML = TabCommand.getCloseChildrenButtonSVG()
 
     closeChildrenButton.addEventListener('click', (_event) => {
-      console.log(this)
       this.messagingFunction({command: 'CloseChildren', tabId: this.tabId})
     })
     closeButton.parentNode.insertBefore(closeChildrenButton, closeButton)
     return this
   }
 
-  hideCloseChildrenButton() {
+  hideCloseChildrenButton () {
     if (!this.element) {
       return this.queueCommand('hideCloseChildrenButton', arguments)
     }
@@ -115,7 +115,7 @@ class TabCommand {
   }
 
   /// icon for close children button. Vivaldi's close tab icon + three circles
-  static getCloseChildrenButtonSVG() {
+  static getCloseChildrenButtonSVG () {
     return `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
             <path d="M13.5 6l-1.4-1.4-3.1 3-3.1-3L4.5 6l3.1 3.1-3 2.9 1.5 1.4L9 10.5l2.9 2.9 1.5-1.4-3-2.9"></path>
             <circle
@@ -140,11 +140,11 @@ class UIController {
     this.messagingFunction = null
   }
 
-  setMessagingFunction(messagingFunction) {
+  setMessagingFunction (messagingFunction) {
     this.messagingFunction = messagingFunction
   }
 
-  tab(tabId) {
+  tab (tabId) {
     if (!this.tabs[tabId]) {
       this.tabs[tabId] = new TabCommand(tabId, this.getElement(tabId))
       this.tabs[tabId].setMessagingFunction(this.messagingFunction)
@@ -156,7 +156,7 @@ class UIController {
     const buttonId = 'refresh-tab-tree'
     const existing = document.getElementById(buttonId)
     if (existing) {
-      return
+      return this
     }
 
     const target = document.querySelector('#tabs-container > .toolbar')
@@ -167,10 +167,12 @@ class UIController {
     button.classList = 'button-toolbar refresh-tab-tree'
 
     button.addEventListener('click', (_event) => {
-      messaging.send({ command: 'RenderAllTabs' })
+      this.messagingFunction({ command: 'RenderAllTabs' })
+      // messaging.send({ command: 'RenderAllTabs' })
     })
 
     target.appendChild(button)
+    return this
   }
 
   getElement (tabId) {

@@ -27,9 +27,9 @@ class VivaldiUIObserver {
   }
 
   init() {
+    console.log('init')
     waitForElement('#main > .inner', 5000)
-      .then(
-        tabContainerParent => {
+      .then(tabContainerParent => {
           this.initTabContainerObserver(tabContainerParent)
           const tabContainer = this.findTabContainerFromDocument()
           tabContainer && this.onTabContainerCreated(tabContainer)
@@ -39,6 +39,8 @@ class VivaldiUIObserver {
   }
 
   initTabContainerObserver(tabContainerParent) {
+    console.log('initTabContainer')
+    console.log(this.tabContainerObserver)
     this.tabContainerObserver = new MutationObserver(this.findTabContainerFromMutations.bind(this))
     this.tabContainerObserver.observe(tabContainerParent, {
       attributes: false,
@@ -48,6 +50,8 @@ class VivaldiUIObserver {
   }
 
   initTabObserver(tabStripElement) {
+    console.log('initTabObserver')
+    console.log(this.tabObserver)
     this.tabObserver = new MutationObserver(this.findTabsFromMutations.bind(this))
     this.tabObserver.observe(tabStripElement, {
       attributes: false,
@@ -69,7 +73,6 @@ class VivaldiUIObserver {
   }
 
   onTabContainerRemoved(tabContainerElement) {
-    console.log('removed', tabContainerElement)
     this.tabContainer.eventHandlers['onRemoved'].forEach(eventHandler => eventHandler(tabContainerElement))
   }
 
@@ -126,7 +129,7 @@ function waitForElement(selector, rejectAfterMs) {
     const retryTime = 100
     let totalPollTime = 0
 
-    var pollingTimer = setInterval(() => {
+    setInterval(() => {
       element = document.querySelector(selector)
       if (element) {
         resolve(element)
