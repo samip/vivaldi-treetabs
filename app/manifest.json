@@ -1,7 +1,7 @@
 {
   "name": "Vivaldi treetabs",
   "short_name": "Vivaldi treetabs",
-  "description": "Show tabs as hierarchical tree. Requires separate browser hook component. https://github.com/samip/vivaldi-treetabs for more information.",
+  "description": "Show tabs as hierarchical tree. Requires  installation of separate userscript component. https://github.com/samip/vivaldi-treetabs for more information.",
   "version": "0.1.0",
   "manifest_version": 2,
 
@@ -25,6 +25,5 @@
     }
   },
   "permissions": [
-    "tabs"
   ]
 }

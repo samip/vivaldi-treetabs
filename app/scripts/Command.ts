@@ -15,7 +15,7 @@ export default class Command {
     this.command = command
 
     // browser.html extension id
-    // Can it ever change?
+    // Could this ever change?
     this.browserExtensionId = 'mpognobbkildjkofajifpdfhcoklimli' 
     this.parameters = parameters
     this.logEnabled = true
@@ -45,7 +45,7 @@ export default class Command {
     let parameters = {...this.parameters, ...{command: this.command}}
 
      if (this.logEnabled) {
-      console.info('Sending command to extension: ' + this.browserExtensionId)
+      console.info('Sending command to browserhook: ' + this.browserExtensionId)
       console.table(parameters)
     }
 
@@ -62,11 +62,8 @@ export default class Command {
     switch (request.command) {
       case 'CloseChildren':
         let tab = tabContainer.get(request.tabId)
-
         if (tab) {
           tab.removeChildren()
-        } else {
-          console.error('Trying to close children of missing tab')
         }
         break
       case 'RenderAllTabs':
@@ -85,10 +82,13 @@ export default class Command {
         break
       default:
         console.error('Unknown command from browserhook', request.command)
+        break
+    }
+    if (chrome.runtime.lastError) {
+      console.error(chrome.runtime.lastError)
     }
   }
 
 }
-// export type MessageResponse = (message:any, port:Port) => void
 export type ResponseCallback = (response: any) => any
 export type cb = (message: any, port: chrome.runtime.Port) => void

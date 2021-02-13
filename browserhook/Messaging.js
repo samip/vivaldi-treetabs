@@ -1,20 +1,17 @@
 class Messaging {
   constructor(tabControl) {
     this.port = null
+    this.random = Math.random()
     this.uiControl = tabControl
   }
 
   init() {
     chrome.runtime.onConnectExternal.addListener(this.onConnected.bind(this))
-    if (chrome.runtime.lastError) {
-      console.log(chrome.runtime.lastError)
-    }
   }
 
   onConnected(port) {
     this.port = port
     this.port.onMessage.addListener(this.onReceived.bind(this))
-    console.log('Connected to browserhook', port)
   }
 
   /*
@@ -43,8 +40,7 @@ class Messaging {
      * @param TabId
      */
     case 'HideCloseChildrenButton':
-      let a = this.uiControl.tab(request.tabId).hideCloseChildrenButton()
-      console.log(a)
+      this.uiControl.tab(request.tabId).hideCloseChildrenButton()
       break
 
     default:
@@ -55,12 +51,13 @@ class Messaging {
 
   send(msg) {
     if (this.port) {
+      console.log(this.port)
       this.port.postMessage(msg)
-      if (chrome.runtime.lastError) {
-        console.log(chrome.runtime.lastError)
-      }
     } else {
       console.error('Trying to send message without connection', msg)
+    }
+    if (chrome.runtime.lastError) {
+      console.log(chrome.runtime.lastError)
     }
   }
 }
