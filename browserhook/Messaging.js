@@ -1,18 +1,23 @@
 class Messaging {
+
   constructor(tabControl) {
-    this.port = null
-    this.random = Math.random()
     this.uiControl = tabControl
+    this.extensionId = 'gclljglmpdnfmciiopkboelpehcnjdfp'
   }
 
   init() {
-    chrome.runtime.onConnect.addListener(this.onConnected.bind(this))
+    chrome.runtime.onConnectExternal.addListener(this.onConnected.bind(this))
+  }
+
+  connect() {
+    if (this.port) {
+      this.port = this.connect(this.extensionId)
+    }
   }
 
   onConnected(port) {
-    console.log(this.random)
-    console.log(port)
     this.port = port
+    this.port.onDisconnect.addListener(x => console.log('Disconnect', x))
     this.port.onMessage.addListener(this.onReceived.bind(this))
   }
 

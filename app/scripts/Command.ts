@@ -3,6 +3,7 @@ Messaging to and from BrowserHook
 */
 
 import {tabContainer} from './TabContainer'
+import Connection from './Connection'
 
 export default class Command {
   command: string
@@ -13,39 +14,17 @@ export default class Command {
 
   constructor(command:string, parameters:object) {
     this.command = command
-
-    // browser.html extension id
-    // Could this ever change?
-    this.browserExtensionId = 'mpognobbkildjkofajifpdfhcoklimli' 
     this.parameters = parameters
     this.logEnabled = true
-
-    if (!this.port) {
-      try {
-        this.port = this.connect()
-        this.port.onMessage.addListener(this.onReceived)
-      } catch(e) {
-        throw e
-      }
-    }
-  }
-
-  connect(): chrome.runtime.Port {
-    const port = chrome.runtime.connect(this.browserExtensionId)
-
-    if (chrome.runtime.lastError) {
-      throw new Error('Connect failed to browser.html. ' +
-        'Is browserhook installed? chrome.runtime.lastError: ' + chrome.runtime.lastError)
-    }
-
-    return port
+    this.port = Connection.getConnection(this.onReceived.bind(this)).port
+    console.log(this.port)
   }
 
   send(_callback?:ResponseCallback) {
     let parameters = {...this.parameters, ...{command: this.command}}
 
      if (this.logEnabled) {
-      console.info('Sending command to browserhook: ' + this.browserExtensionId)
+      console.info('Sending command to browserhook')
       console.table(parameters)
     }
 
@@ -56,7 +35,7 @@ export default class Command {
   }
 
   /** Commands received from browserhook **/
-  onReceived(request: any, port: chrome.runtime.Port) {
+  onReceived(request: any) {
     console.log('External message received', request)
 
     switch (request.command) {
@@ -73,7 +52,7 @@ export default class Command {
         // Not used
         tab = tabContainer.get(request.tabId)
         if (tab) {
-          port.postMessage({
+          this.port.postMessage({
             command: 'TabIndent',
             tabId: request.tabId,
             indent: tab.depth()
