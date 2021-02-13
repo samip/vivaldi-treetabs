@@ -24,13 +24,12 @@ export default class Command {
     let parameters = {...this.parameters, ...{command: this.command}}
 
      if (this.logEnabled) {
-      console.info('Sending command to browserhook')
       console.table(parameters)
     }
 
     this.port.postMessage(parameters)
     if (chrome.runtime.lastError) {
-      throw new Error('postMessage error: ' + chrome.runtime.lastError)
+      console.error(chrome.runtime.lastError)
     }
   }
 

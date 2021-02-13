@@ -15,13 +15,11 @@ class ChromeCallbacks {
       const parentTab = tabContainer.get(chromeTab.openerTabId)
       tab.parentTo(parentTab)
       tab.renderIndentation()
-      console.info('Child tab', tab, 'parented to', parentTab)
     }
     // top level tab -> parent to window's root node
     else {
       const root = tab.getWindow().root
       tab.parentTo(root)
-      console.info('Root tab ', tab, ' parented to ', root)
     }
   }
 

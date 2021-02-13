@@ -17,8 +17,7 @@ vivaldiUI.tabContainer.addCallback('onCreated', (_element) => {
 vivaldiUI.tab.addCallback('onCreated', (element, tabId) => {
   // Commands were given to tab from extension before tab was rendered in UI,
   // run them now.
-  let cmds = uiControl.tab(tabId).runQueuedCommands(element)
-  console.log(cmds)
+  uiControl.tab(tabId).runQueuedCommands(element)
 })
 
 messaging.init()
