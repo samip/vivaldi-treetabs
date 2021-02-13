@@ -6,10 +6,12 @@ class Messaging {
   }
 
   init() {
-    chrome.runtime.onConnectExternal.addListener(this.onConnected.bind(this))
+    chrome.runtime.onConnect.addListener(this.onConnected.bind(this))
   }
 
   onConnected(port) {
+    console.log(this.random)
+    console.log(port)
     this.port = port
     this.port.onMessage.addListener(this.onReceived.bind(this))
   }
