@@ -12,7 +12,6 @@
     "lint": "standard",
     "browser": "vivaldi-snapshot http://localhost:2012 --load-extension=dist/chrome/ --remote-debugging-port=2012 --flag-switches-begin --debug-packed-apps --silent-debugger-extension-api --flag-switches-end",
     "kill-browser": "pkill -f vivaldi-snapshot"
-
   },
   "standard": {
     "globals": [
@@ -33,6 +32,7 @@
     "gulp-bump": "2.x.x",
     "gulp-cache": "0.x.x",
     "gulp-clean-css": "^3.x.x",
+    "gulp-concat": "^2.6.1",
     "gulp-filter": "^5.x.x",
     "gulp-git": "^2.10.1",
     "gulp-if": "2.x.x",
