@@ -1,11 +1,13 @@
 import gulp from 'gulp'
 import gulpSequence from 'gulp-sequence'
 
-gulp.task('build', gulpSequence(
+gulp.task('dist', gulpSequence(
   'clean', [
     'manifest',
     'scripts',
     'hook',
-    'chromereload'
+    'instruction',
+    'pack'
   ]
 ))
+

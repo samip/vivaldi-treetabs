@@ -56,6 +56,6 @@ gulp.task('scripts', (cb) => {
         children: false
       }))
     }))
-    .pipe(gulp.dest(`dist/${args.vendor}/scripts`))
+    .pipe(gulp.dest(`dist/extension/scripts`))
     .pipe(gulpif(args.watch, livereload()))
 })
