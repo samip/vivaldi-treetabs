@@ -1,19 +1,14 @@
 {
-  "name": "__MSG_appName__",
-  "short_name": "__MSG_appShortName__",
-  "description": "__MSG_appDescription__",
-  "version": "0.0.0",
+  "name": "Vivaldi treetabs",
+  "short_name": "Vivaldi treetabs",
+  "description": "Show tabs as hierarchical tree. Requires separate browser hook component. https://github.com/samip/vivaldi-treetabs for more information.",
+  "version": "0.1.0",
   "manifest_version": 2,
-  "content_security_policy": "script-src 'self' 'unsafe-eval'; object-src 'self'",
 
   "default_locale": "en",
   "icons": {
     "16": "images/icon-16.png",
     "128": "images/icon-128.png"
-  },
-  "externally_connectable" : {
-    "matches": [ "http://localhost/*" ],
-    "ids": [ "mpognobbkildjkofajifpdfhcoklimli" ]
   },
   "background": {
     "scripts": [
@@ -26,14 +21,10 @@
         "default": "Ctrl+Shift+Y",
         "mac": "Command+Shift+Y"
       },
-      "description": "Close current tab's children"
+      "description": "Close all tabs opened from current tab"
     }
   },
   "permissions": [
-    "contextMenus",
-    "tabs",
-    "storage",
-    "<all_urls>",
-    "management"
+    "tabs"
   ]
 }
