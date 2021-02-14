@@ -4,17 +4,14 @@ import Window from './Window'
 import {windowContainer} from './WindowContainer'
 import {TabCallback} from './Types/TabCallback'
 
-/*
-Represents either tab or Window's root node
-*/
-
 export default class Tab {
-
   id: number
-  tab: chrome.tabs.Tab // https://developer.chrome.com/extensions/tabs
+
+  // https://developer.chrome.com/extensions/tabs
+  tab: chrome.tabs.Tab 
   children: TabContainer
   parent: Tab
-  initialIndex: number // Index (from top to bottom) of tab when it was created
+  initialIndex: number
   isRoot: boolean
 
   constructor(chromeTab?: chrome.tabs.Tab) {
@@ -33,22 +30,30 @@ export default class Tab {
       this.isRoot = true
       this.id = 0
     }
-
     this.children = new TabContainer()
   }
 
-  /** Call function on every child (but not children of children) **/
+  // Call function on every child (but not children of children)
   applyChildren(callback: TabCallback): void {
     this.children.applyAll(callback)
   }
 
-  /** Call function on every descendant (children, children of children) **/
+  // Call function on every descendant (children, children of children
   applyDescendants(callback: TabCallback): void {
     this.children.tabs.forEach((tab: Tab) => {
       callback(tab)
       return tab.applyDescendants(callback)
     })
   }
+
+
+  // Send tab specific command to Browserhook
+  command(command: string, parameters: any = {}): void {
+    parameters['tabId'] = this.id
+    const cmd = new Command(command, parameters)
+    cmd.send(this.getWindow())
+  }
+
 
   /** Traverse to root, return distance / depth / indentlevel  **/
   /* eg:
@@ -69,29 +74,18 @@ export default class Tab {
         return distance
       }
     }
-
     return helper(this, 0)
   }
 
-  /** Send tab specific command to Browserhook **/
-  command(command: string, parameters: any = {}): void {
-    parameters['tabId'] = this.id
-    const cmd = new Command(command, parameters)
-    cmd.send(this.getWindow())
-  }
-
-  /** Get level of indentation required for tab **/
   depth(): number {
     return this.calculateDistanceToRoot()
   }
 
-  /** Get tab's Window object **/
   getWindow(): Window {
     const windowId = this.tab.windowId
     return windowContainer.get(windowId)
   }
 
-  /** Set parent **/
   parentTo(parent: Tab): Tab {
     // Add tab to new parent's child list
     parent.children.add(this)
@@ -104,7 +98,7 @@ export default class Tab {
     return this
   }
 
-  /** Remove tab and parent it's children to own parent **/
+  // Remove tab and parent it's children to own parent
   remove(): void {
     // Parent removed tab's children to own parent and redraw
     this.applyDescendants((child: Tab) => {
@@ -112,13 +106,13 @@ export default class Tab {
       if (child.parent.id === this.id) {
         child.parentTo(this.parent)
       }
-      // Re-render all descendants since their indentation has changed, while parent stayed the same.
+      // Re-render all descendants since their indentation has changed,      // while parent stayed the same.
       child.renderIndentation()
     })
 
     this.parent.children.remove(this) // remove from parent's children
 
-    // only child was removed -> hide close children button
+    // The last child was removed -> hide close children button
     if (!this.parent.isRoot && this.parent.children.isEmpty()) {
       this.parent.command('HideCloseChildrenButton')
     }
@@ -133,7 +127,7 @@ export default class Tab {
     })
   }
 
-  /** Called on each tab after tab container re-appears **/
+  // Called on each tab after tab container reappear is redrawn.
   renderEverything(): void {
     if (!this.children.isEmpty()) {
       this.command('ShowCloseChildrenButton')
@@ -141,7 +135,6 @@ export default class Tab {
     this.renderIndentation()
   }
 
-  /** Send IndentTab command to BrowserHook **/
   renderIndentation(): void {
     const depth = this.depth()
     this.command('IndentTab', {'indentLevel': depth})

@@ -26,4 +26,6 @@ Icon from https://www.cleanpng.com/png-digital-data-digitale-nachhaltigkeit-sust
 
 `vivaldi-snapshot --load-extension=/home/sami/Documents/vivaldi-treetabs/dist/chrome/ --flag-switches-begin --debug-packed-apps --silent-debugger-extension-api --flag-switches-end`
 
+https://developer.chrome.com/docs/extensions/reference/windows/#type-QueryOptions
+
 ./installBrowserHook.sh && npm run kill-browser; npm run browser

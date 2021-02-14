@@ -1,30 +1,24 @@
 class Messaging {
-  constructor (tabControl) {
-    this.uiControl = tabControl
-    this.extensionId = 'gclljglmpdnfmciiopkboelpehcnjdfp'
-  }
-
-  init () {
-    chrome.runtime.onConnectExternal.addListener(this.onConnected.bind(this))
-  }
-
-  connect () {
-    if (this.port) {
-      this.port = this.connect(this.extensionId)
-    }
-  }
-
-  onConnected (port) {
-    this.port = port
-    this.port.onDisconnect.addListener(x => console.log('Disconnect', x))
-    this.port.onMessage.addListener(this.onReceived.bind(this))
+  constructor (port, uiControl) {
     console.log('Connected', port)
+    this.uiControl = uiControl
+    this.port = port
+
+    if (port) {
+      this.port.onDisconnect.addListener(x => console.log('Disconnect', x))
+      this.port.onMessage.addListener(this.onReceived.bind(this))
+      this.port.postMessage('Moro ' + this.port.name)
+    }
   }
 
   /*
     Handle incoming command
   */
   onReceived (request, port) {
+    if (port.name !== this.port.name) {
+      console.error('Helvetin porteilla', port, this.port)
+    }
+
     switch (request.command) {
     /*
       Indents tab by <indentLevel> steps.
@@ -47,9 +41,6 @@ class Messaging {
      */
       case 'HideCloseChildrenButton':
         this.uiControl.tab(request.tabId).hideCloseChildrenButton()
-        break
-      case 'Handshake':
-        console.log(request, port)
         break
       default:
         console.error('Invalid command: ' + request.command)

@@ -23,9 +23,7 @@ export class TabContainer {
   }
 
   applyAll(callback: TabCallback): void {
-    this.tabs.forEach((tab:Tab) => {
-      callback(tab)
-    })
+    this.tabs.forEach((tab:Tab) => callback(tab))
   }
 
   getFirst(): Tab {
@@ -57,7 +55,7 @@ export class TabContainer {
           tabObj.parentTo(parent)
         }
 
-        // parent not yet in container. Wait for it to be created
+        // Parent not yet in container. Wait for it to be created
         else {
           if (!parentQueue.has(tab.openerTabId)) {
             parentQueue.set(tab.openerTabId, [])

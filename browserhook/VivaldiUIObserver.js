@@ -27,7 +27,6 @@ class VivaldiUIObserver {
   }
 
   init() {
-    console.log('init')
     waitForElement('#main > .inner', 5000)
       .then(tabContainerParent => {
           this.initTabContainerObserver(tabContainerParent)
@@ -39,8 +38,6 @@ class VivaldiUIObserver {
   }
 
   initTabContainerObserver(tabContainerParent) {
-    console.log('initTabContainer')
-    console.log(this.tabContainerObserver)
     this.tabContainerObserver = new MutationObserver(this.findTabContainerFromMutations.bind(this))
     this.tabContainerObserver.observe(tabContainerParent, {
       attributes: false,
@@ -50,8 +47,6 @@ class VivaldiUIObserver {
   }
 
   initTabObserver(tabStripElement) {
-    console.log('initTabObserver')
-    console.log(this.tabObserver)
     this.tabObserver = new MutationObserver(this.findTabsFromMutations.bind(this))
     this.tabObserver.observe(tabStripElement, {
       attributes: false,
@@ -61,7 +56,6 @@ class VivaldiUIObserver {
   }
 
   onTabContainerCreated(tabContainerElement) {
-    console.log('added container')
     this.tabContainer.eventHandlers['onCreated'].forEach(eventHandler => eventHandler(tabContainerElement))
 
     // TODO: avoid searching whole document, use tabContainerElement instead
@@ -97,8 +91,15 @@ class VivaldiUIObserver {
     const isTabContainer = node => node.id === VivaldiUIObserver.tabContainerElementId
 
     mutations.forEach(mutation => {
-      mutation.addedNodes.forEach(node => isTabContainer(node) && this.onTabContainerCreated(node))
-      mutation.removedNodes.forEach(node => isTabContainer(node) && this.onTabContainerRemoved(node))
+      mutation.addedNodes.forEach(node => {
+        isTabContainer(node)
+        this.onTabContainerCreated(node)
+      })
+
+      mutation.removedNodes.forEach(node => {
+        isTabContainer(node)
+        this.onTabContainerRemoved(node)
+      })
     })
   }
 

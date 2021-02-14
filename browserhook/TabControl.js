@@ -1,13 +1,10 @@
 class TabCommand {
+
   constructor (tabId, element) {
     this.tabId = tabId
     this.element = element
     this.messagingFunction = null
     this.queue = []
-
-    this.indentStep = 15
-    this.indentUnit = 'px'
-    this.indentAttribute = 'paddingLeft'
   }
 
   setMessagingFunction (messagingFunction) {
@@ -16,13 +13,12 @@ class TabCommand {
     this.messagingFunction = messagingFunction
   }
 
-  element (element) {
+  setElement (element) {
     this.element = element
     return this
   }
 
-  runQueuedCommands (element) {
-    this.element = element
+  runQueuedCommands (_element) {
     const queuedCommands = []
 
     while (this.queue.length) {
@@ -30,7 +26,6 @@ class TabCommand {
       this[cmd.command](cmd.args)
       queuedCommands.push(cmd)
     }
-
     return queuedCommands
   }
 
@@ -43,7 +38,6 @@ class TabCommand {
       command: command,
       args: argsArray
     })
-
     return this
   }
 
@@ -60,14 +54,21 @@ class TabCommand {
       return this.queueCommand('indentTab', arguments)
     }
 
-    const indentVal = (indentLevel * this.indentStep) + this.indentUnit
-    if (this.element.parentElement && this.element.parentElement.classList.contains('tab-position')) {
-      this.element.parentElement.style[this.indentAttribute] = indentVal
-      return this
-    } else {
-      // Probably broken by Vivaldi update
-      console.error('Broken by update. Raise issue in https://github.com/samip/vivaldi-treetabs')
+    const indentVal = (indentLevel * this.indentationOption('step')) + this.indentationOption('unit')
+
+    if (this.element.parentElement) {
+      // Setting tab elements parents's padding-left works well as of 14.2.2021
+      this.element.parentElement.style[this.indentationOption('attribute')] = indentVal
     }
+  }
+
+  indentationOption (key) {
+    const options = {
+      step: 15,
+      unit: 'px',
+      attribute: 'paddingLeft'
+    }
+    return options[key]
   }
 
   showCloseChildrenButton () {
@@ -114,7 +115,7 @@ class TabCommand {
     return this
   }
 
-  /// icon for close children button. Vivaldi's close tab icon + three circles
+  // icon for close children button. Vivaldi's close tab icon + three circles
   static getCloseChildrenButtonSVG () {
     return `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 18 18">
             <path d="M13.5 6l-1.4-1.4-3.1 3-3.1-3L4.5 6l3.1 3.1-3 2.9 1.5 1.4L9 10.5l2.9 2.9 1.5-1.4-3-2.9"></path>
@@ -135,6 +136,7 @@ class TabCommand {
 }
 
 class UIController {
+
   constructor () {
     this.tabs = {}
     this.messagingFunction = null
@@ -154,6 +156,7 @@ class UIController {
 
   showRefreshViewButton () {
     const buttonId = 'refresh-tab-tree'
+    // Busted
     const existing = document.getElementById(buttonId)
     if (existing) {
       return this
@@ -168,7 +171,6 @@ class UIController {
 
     button.addEventListener('click', (_event) => {
       this.messagingFunction({ command: 'RenderAllTabs' })
-      // messaging.send({ command: 'RenderAllTabs' })
     })
 
     target.appendChild(button)
@@ -178,4 +180,5 @@ class UIController {
   getElement (tabId) {
     return document.getElementById('tab-' + tabId)
   }
+
 }

@@ -16,18 +16,14 @@ export default class Window {
   }
 
   static init(chromeWindow:chrome.windows.Window) {
-    const window = new Window(chromeWindow.id, chromeWindow)
-    window.connect()
-    window.connection.port.postMessage({ command: 'Handshake' })
-    return window
+    return new Window(chromeWindow.id, chromeWindow)
   }
 
   connect() {
+    const portName = `window-${this.id}`
     this.connection = new Connection()
-    // TODO: catch error
-    this.connection.connect({ name: `window-${this.id}` })
+    this.connection.connect({ name: portName })
   }
-
 
   isConnected() : boolean {
     return this.connection !== undefined

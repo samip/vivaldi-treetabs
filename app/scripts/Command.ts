@@ -1,7 +1,3 @@
-/*
-Messaging to and from BrowserHook
-*/
-
 import {tabContainer} from './TabContainer'
 import Window from './Window'
 import {CommandParameters, CommandType} from './Types/CommandType'
@@ -17,7 +13,7 @@ export default class Command {
     this.logEnabled = true
   }
 
-  /** Send command to window via Chrome external messaging API **/
+  // Send command to window via Chrome external messaging API
   send(window: Window) {
     const parameters = {...this.parameters, ...{command: this.command}}
 
@@ -29,36 +25,29 @@ export default class Command {
       window.connect()
     }
 
-    // TODO: metodiin
-    window.connection.port.postMessage(parameters)
-
-    if (chrome.runtime.lastError) {
-      console.error(chrome.runtime.lastError)
+    if (window.connection.sendMessage(parameters)) {
+      console.error('Message couldn\'t be posted')
     }
   }
 
 
-  /** Commands received from browserhook **/
-  onReceived(request: any) {
+  // Commands received from browserhook
+  static onReceived(request: any) {
     console.log('External message received', request)
 
     switch (request.command) {
-      case 'CloseChildren':
-        let tab = tabContainer.get(request.tabId)
-        if (tab) {
-          tab.removeChildren()
-        }
-        break
-      case 'RenderAllTabs':
-        tabContainer.applyAll((tab: any) => tab.renderEverything())
-        break
-      default:
-        console.error('Unknown command from browserhook', request.command)
-        break
-    }
-    if (chrome.runtime.lastError) {
-      console.error(chrome.runtime.lastError)
+    case 'CloseChildren':
+      let tab = tabContainer.get(request.tabId)
+      tab.removeChildren()
+      break
+    case 'RenderAllTabs':
+      tabContainer.applyAll((tab: any) => tab.renderEverything())
+      break
+    default:
+      console.error('Unknown command: ' + request.command)
+      break
     }
   }
 }
+
 export type ResponseCallback = (response: any) => any
