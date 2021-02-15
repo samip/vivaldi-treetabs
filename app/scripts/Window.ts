@@ -4,14 +4,13 @@ import Connection from './Connection'
 export default class Window {
 
   id: number
-  window: chrome.windows.Window // https://developers.chrome.com/extensions/windows
+  chromeWindow: chrome.windows.Window // https://developers.chrome.com/extensions/windows
   root: Tab
   connection: Connection
 
   constructor(id:number, chromeWindow:chrome.windows.Window) {
     this.id = id
-    this.window = chromeWindow
-    // Every tab in window is descendant of this
+    this.chromeWindow = chromeWindow
     this.root = new Tab()
   }
 
@@ -19,10 +18,15 @@ export default class Window {
     return new Window(chromeWindow.id, chromeWindow)
   }
 
+  // Open messaging port between browser window and extension
   connect() {
     const portName = `window-${this.id}`
     this.connection = new Connection()
     this.connection.connect({ name: portName })
+  }
+
+  onRemoved() {
+    this.root.applyDescendants(tab => tab.remove())
   }
 
   isConnected() : boolean {

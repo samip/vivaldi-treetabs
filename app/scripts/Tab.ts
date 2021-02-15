@@ -5,14 +5,17 @@ import {windowContainer} from './WindowContainer'
 import {TabCallback} from './Types/TabCallback'
 
 export default class Tab {
+
   id: number
 
   // https://developer.chrome.com/extensions/tabs
-  tab: chrome.tabs.Tab 
+  chromeTab: chrome.tabs.Tab
   children: TabContainer
   parent: Tab
   initialIndex: number
   isRoot: boolean
+
+  private closeChildrenButtonVisible: boolean
 
   constructor(chromeTab?: chrome.tabs.Tab) {
     if (chromeTab) {
@@ -24,13 +27,14 @@ export default class Tab {
         // should never happen here
         throw new Error('No tab id')
       }
-      this.tab = chromeTab
+      this.chromeTab = chromeTab
       this.initialIndex = chromeTab.index
     } else {
       this.isRoot = true
       this.id = 0
     }
     this.children = new TabContainer()
+    this.closeChildrenButtonVisible = false
   }
 
   // Call function on every child (but not children of children)
@@ -82,7 +86,7 @@ export default class Tab {
   }
 
   getWindow(): Window {
-    const windowId = this.tab.windowId
+    const windowId = this.chromeTab.windowId
     return windowContainer.get(windowId)
   }
 
@@ -91,8 +95,8 @@ export default class Tab {
     parent.children.add(this)
     this.parent = parent
     // Has children now -> show close children button
-    if (!parent.isRoot) {
-      parent.command('ShowCloseChildrenButton')
+    if (!parent.isRoot && !parent.closeChildrenButtonVisible) {
+      parent.showCloseChildrenButton()
     }
 
     return this
@@ -114,7 +118,7 @@ export default class Tab {
 
     // The last child was removed -> hide close children button
     if (!this.parent.isRoot && this.parent.children.isEmpty()) {
-      this.parent.command('HideCloseChildrenButton')
+      this.parent.hideCloseChildrenButton()
     }
   }
 
@@ -135,8 +139,19 @@ export default class Tab {
     this.renderIndentation()
   }
 
+  showCloseChildrenButton(): void {
+    this.command('ShowCloseChildrenButton')
+    this.closeChildrenButtonVisible = true
+  }
+
+  hideCloseChildrenButton(): void {
+    this.command('HideCloseChildrenButton')
+    this.closeChildrenButtonVisible = false
+  }
+
   renderIndentation(): void {
     const depth = this.depth()
     this.command('IndentTab', {'indentLevel': depth})
   }
+
 }

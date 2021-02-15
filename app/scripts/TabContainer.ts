@@ -84,6 +84,7 @@ export class TabContainer {
       this.add(tabObj)
     })
   }
+
 }
 
 // Contains references to all tabs from each window

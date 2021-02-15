@@ -3,6 +3,7 @@ import Window from './Window'
 import {CommandParameters, CommandType} from './Types/CommandType'
 
 export default class Command {
+
   command: string
   parameters: CommandParameters
   logEnabled: boolean
@@ -54,6 +55,7 @@ export default class Command {
       break
     }
   }
+
 }
 
 export type ResponseCallback = (response: any) => any
