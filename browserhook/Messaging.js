@@ -1,17 +1,43 @@
 class Messaging {
+
   constructor (port, uiControl) {
     this.uiControl = uiControl
     this.port = port
-    this.alwaysRespond = true
+    this.alwaysRespond = false
 
     if (port) {
-      this.port.onDisconnect.addListener(x => console.log('Disconnect', x))
-      this.port.onMessage.addListener(this.onReceived.bind(this))
-      this.port.postMessage('Moro ' + this.port.name)
+      this.addListeners()
+      this.send('OK')
     } else {
       throw new treeTabUserScriptError('Invalid port')
     }
 
+  }
+  addListeners() {
+    this.port.onDisconnect.addListener(x => console.log('Disconnect', x))
+    this.port.onMessage.addListener(this.onReceived.bind(this))
+    if (this.uiControl) {
+      this.uiControl.setMessagingFunction(message => this.send(message))
+    }
+  }
+
+  reconnect() {
+    const extId = 'plakklklcjfeifjiodkjmgmbiljebfec'
+    this.port.disconnect()
+
+    this.port = chrome.runtime.connect(extId, {name: this.port.name})
+    if (chrome.runtime.lastError) {
+      console.error('Reconnect failed: ' + chrome.runtime.lastError)
+      return false
+    }
+
+    this.addListeners()
+    this.sendOkMessage()
+    return true
+  }
+
+  sendOkMessage() {
+    this.sendOkMessage()
   }
 
   // Handle incoming command
@@ -25,7 +51,6 @@ class Messaging {
       case 'IndentTab':
         this.uiControl.tab(request.tabId).indentTab(request.indentLevel)
         break
-
 
       // Show or create 'Close child tabs' button in tab strip
       // @param TabId
@@ -50,9 +75,18 @@ class Messaging {
     }
   }
 
-  send (msg) {
+  send (msg, reconnected) {
+    reconnected = true // disable reconnect for now
     if (this.port) {
       this.port.postMessage(msg)
+      if (chrome.runtime.lastError) {
+        if (reconnected) {
+          console.error(chrome.runtime.lastError)
+        } else {
+          this.reconnect()
+          this.send(msg, true)
+        }
+      }
     } else {
       console.error('Trying to send message without connection', msg)
     }
@@ -60,4 +94,5 @@ class Messaging {
       console.log(chrome.runtime.lastError)
     }
   }
+
 }

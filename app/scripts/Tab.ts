@@ -98,7 +98,6 @@ export default class Tab {
     if (!parent.isRoot && !parent.closeChildrenButtonVisible) {
       parent.showCloseChildrenButton()
     }
-
     return this
   }
 

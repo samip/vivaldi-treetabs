@@ -135,7 +135,7 @@ class TabCommand {
   }
 }
 
-class UIController {
+class uiController {
 
   constructor () {
     this.tabs = {}

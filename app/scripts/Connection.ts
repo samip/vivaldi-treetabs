@@ -1,4 +1,5 @@
 import Command from './Command'
+import {windowContainer} from './WindowContainer'
 
 export default class Connection {
 
@@ -18,24 +19,38 @@ export default class Connection {
     return this._isActive
   }
 
-  constructor() {
+  constructor(port?:chrome.runtime.Port) {
     // Port is active after OK message is received from UserScript
     // and no disconnect event have been received
     this._isActive = false
+    if (port) {
+      this._port = port
+      this.addListeners()
+    }
+  }
+
+  // Reconnect from userscript
+  static onConnected(port: chrome.runtime.Port) {
+    console.log('connected', port)
+    const windowId = parseInt(port.name.split('-')[1])
+    const window = windowContainer.get(windowId)
+    const connection = new Connection(port)
+    window.setConnection(connection)
   }
 
   addListeners() {
     this.port.onDisconnect.addListener(this.onDisconnect)
     this.port.onMessage.addListener(this.onMessage)
+    chrome.runtime.onConnect.addListener(Connection.onConnected)
   }
 
-  onMessage(message: any, _port:chrome.runtime.Port) {
+  onMessage(message: any, _port: chrome.runtime.Port) {
     // TODO: Command parsing + definitions
 
     if (message == 'OK') {
       this._isActive = true
     } else if (message == 'ACK' || message == 'NACK') {
-      console.log('Extension reply : ' + message)
+      // console.log('Extension reply : ' + message)
     } else if (message.command) {
       Command.onReceived(message)
     }

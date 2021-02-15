@@ -60,6 +60,9 @@ class ChromeCallbacks {
             chrome.tabs.move([item.id], {index: minIndex})
           }
         })
+        if (chrome.runtime.lastError) {
+          console.log(chrome.runtime.lastError)
+        }
       })
     }
   }
@@ -82,13 +85,20 @@ class ChromeCallbacks {
     tab.renderIndentation()
   }
 
-  // move children to new window with their parent?
+  // Tab moved to another window
+  // Update container and reparent children
   static onTabDetached(tabId:number, _info:chrome.tabs.TabDetachInfo) {
     const tab = tabContainer.get(tabId)
     if (!tab) return
 
-    tab.children.tabs.forEach((child: Tab) => {
-      child.parentTo(tab.parent)
+    tab.applyDescendants((child: Tab) => {
+      console.log(child, tab)
+      // Reparent direct children
+      if (child.parent.id === tab.id) {
+        child.parentTo(tab.parent)
+      }
+      // Re-render all descendants since their indentation has changed
+      // while parent stayed the same.
       child.renderIndentation()
     })
   }
@@ -111,7 +121,7 @@ class ChromeCallbacks {
   static onWindowCreated(chromeWindow:chrome.windows.Window) {
     const window = Window.init(chromeWindow)
     // Connect only when needed to avoid race conditions
-    // (window is not really to process messaging immediately)
+    // (window is not ready to process messaging immediately after being created)
     // window.connect()
     windowContainer.add(window)
   }

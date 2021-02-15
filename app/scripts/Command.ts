@@ -11,7 +11,7 @@ export default class Command {
   constructor(command:string, parameters:CommandParameters) {
     this.command = command
     this.parameters = parameters
-    this.logEnabled = true
+    this.logEnabled = false
   }
 
   // Send command to window via Chrome external messaging API

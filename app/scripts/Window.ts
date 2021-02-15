@@ -25,6 +25,10 @@ export default class Window {
     this.connection.connect({ name: portName })
   }
 
+  setConnection(connection: Connection) {
+    this.connection = connection
+  }
+
   onRemoved() {
     this.root.applyDescendants(tab => tab.remove())
   }
