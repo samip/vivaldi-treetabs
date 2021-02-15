@@ -6,6 +6,7 @@ import jsonTransform from 'gulp-json-transform'
 import plumber from 'gulp-plumber'
 import applyBrowserPrefixesFor from './lib/applyBrowserPrefixesFor'
 import args from './lib/args'
+import replace from 'gulp-replace'
 
 gulp.task('manifest', () => {
   return gulp.src('app/manifest.json')
@@ -21,6 +22,9 @@ gulp.task('manifest', () => {
         applyBrowserPrefixesFor(args.vendor),
         2 /* whitespace */
       )
+    )
+    .pipe(
+      replace('Init.ts', 'Init.js')
     )
     .pipe(gulp.dest(`dist/extension`))
     .pipe(gulpif(args.watch, livereload()))

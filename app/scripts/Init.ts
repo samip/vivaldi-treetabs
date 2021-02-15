@@ -1,4 +1,4 @@
-// import 'chromereload/devonly' // Remove this before building
+import 'chromereload/devonly' // Remove this before building
 import Tab from './Tab'
 import {tabContainer} from './TabContainer'
 import {windowContainer} from './WindowContainer'
@@ -110,7 +110,9 @@ class ChromeCallbacks {
 
   static onWindowCreated(chromeWindow:chrome.windows.Window) {
     const window = Window.init(chromeWindow)
-    window.connect()
+    // Connect only when needed to avoid race conditions
+    // (window is not really to process messaging immediately)
+    // window.connect()
     windowContainer.add(window)
   }
 

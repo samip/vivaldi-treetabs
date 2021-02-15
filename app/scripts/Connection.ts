@@ -2,11 +2,26 @@ import Command from './Command'
 
 export default class Connection {
 
-  public port: chrome.runtime.Port
-  private _disconnected: boolean
+  private _port: chrome.runtime.Port
+  private _isDisconnected: boolean
+  private _isActive: boolean
 
-  public get disconnected() {
-    return this._disconnected
+  public get port() {
+    return this._port
+  }
+
+  public get isDisconnected() {
+    return this._isDisconnected
+  }
+
+  public get isActivE() {
+    return this._isActive
+  }
+
+  constructor() {
+    // Port is active after OK message is received from UserScript
+    // and no disconnect event have been received
+    this._isActive = false
   }
 
   addListeners() {
@@ -15,29 +30,35 @@ export default class Connection {
   }
 
   onMessage(message: any, _port:chrome.runtime.Port) {
-    console.log('Received message', message)
-    // TODO: parsi viestiä komento, tyypitä komento
-    Command.onReceived(message)
+    // TODO: Command parsing + definitions
+
+    if (message == 'OK') {
+      this._isActive = true
+    } else if (message == 'ACK' || message == 'NACK') {
+      console.log('Extension reply : ' + message)
+    } else if (message.command) {
+      Command.onReceived(message)
+    }
   }
 
   sendMessage(message: any) : boolean {
-    this.port.postMessage(message)
-    return chrome.runtime.lastError !== undefined
+    this._port.postMessage(message)
+    return chrome.runtime.lastError === undefined
   }
 
   onDisconnect(port: chrome.runtime.Port) {
     console.log('Port disconnected', port)
-    this._disconnected = true
+    this._isDisconnected = true
+    this._isActive = false
   }
 
-  /*
-   * ConnectInfo is used to set port name
-   * Current name format is: `window-<window.id>`
-   */
+  // ConnectInfo is used to set port name
+  // Current name format is: `window-<window.id>`
+  // Name is used in user script to match messaging ports and browsing windows
   connect(info?: chrome.runtime.ConnectInfo) {
     // Vivaldi's extension id. Probably shouldn't be hardcoded.
     const extId = 'mpognobbkildjkofajifpdfhcoklimli'
-    this.port = chrome.runtime.connect(extId, info)
+    this._port = chrome.runtime.connect(extId, info)
 
     if (chrome.runtime.lastError) {
       throw new Error('Connect failed to browser.html.'

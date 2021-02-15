@@ -10,7 +10,6 @@ function initTreeTabUserScript(messagingPort) {
 
   const vivaldiUI = new VivaldiUIObserver()
 
-  // TODO: Make sure these arent added multiple times
   vivaldiUI.tabContainer.addCallback('onCreated', (element) => {
     // Tab container is removed when browser enters full screen mode
     // and is rendered again when exiting full screen mode.
@@ -36,12 +35,29 @@ function initTreeTabUserScript(messagingPort) {
   }
 }
 
- // Tama pitaisi ajaa lisarin puolella. 
-
-var openPorts = {}
+class treeTabUserScriptError extends Error {
+  constructor(message) {
+    super(message)
+    this.name = 'treeTabUserScriptError'
+  }
+}
 
 chrome.runtime.onConnectExternal.addListener(port => {
-  console.info('Messaging port for new window', port.name)
-  initTreeTabUserScript(port)
-  openPorts[port.name] = port
+  const windowId = window.vivaldiWindowId
+  if (port.name === 'window-' + windowId) {
+    console.info('Messaging port for new window', port.name)
+
+    window.treeTabsUserScript = initTreeTabUserScript(port)
+    window.lol = window.treeTabsUserScript.toString()
+    window.testit = function() {
+      console.log({asdasd:0})
+    }
+    console.log(window.treeTabsUserScript)
+  }
 })
+
+window.addEventListener('DOMContentLoaded', (event) => {
+  console.log(window)
+  console.log(event)
+  console.log('DOM fully loaded and parsed');
+});

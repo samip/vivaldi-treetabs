@@ -55,7 +55,7 @@ export default class Tab {
   }
 
 
-  /** Traverse to root, return distance / depth / indentlevel  **/
+  // Traverse to root, return distance / depth / indentlevel  **/
   /* eg:
     -a: root
        - b: distance to root: 1

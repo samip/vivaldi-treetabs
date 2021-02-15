@@ -24,6 +24,8 @@
 # Other
 Icon from https://www.cleanpng.com/png-digital-data-digitale-nachhaltigkeit-sustainabilit-5304786/
 
+https://developer.chrome.com/docs/extensions/mv2/messaging/
+
 `vivaldi-snapshot --load-extension=/home/sami/Documents/vivaldi-treetabs/dist/chrome/ --flag-switches-begin --debug-packed-apps --silent-debugger-extension-api --flag-switches-end`
 
 https://developer.chrome.com/docs/extensions/reference/windows/#type-QueryOptions

@@ -17,23 +17,29 @@ export default class Command {
   send(window: Window) {
     const parameters = {...this.parameters, ...{command: this.command}}
 
-    if (this.logEnabled) {
-      console.table(parameters)
-    }
-
     if (!window.isConnected()) {
       window.connect()
+      if (!window.isConnected()) {
+        console.error('Cant connect to window', window)
+        return
+      }
     }
 
-    if (window.connection.sendMessage(parameters)) {
-      console.error('Message couldn\'t be posted')
+    const success = window.connection.sendMessage(parameters)
+    if (!success) {
+      console.error('Command couldn\'t be sent')
+    }
+
+    if (this.logEnabled) {
+      console.table(parameters)
+      const logLine = success ? 'Sent to' : 'Failed to send'
+      console.log(logLine, window)
     }
   }
 
-
   // Commands received from browserhook
   static onReceived(request: any) {
-    console.log('External message received', request)
+    console.log('Command received', request)
 
     switch (request.command) {
     case 'CloseChildren':

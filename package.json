@@ -11,7 +11,8 @@
     "dev:chrome": "gulp --watch --vendor=chrome",
     "lint": "standard",
     "browser": "vivaldi-snapshot http://localhost:2012 --load-extension=dist/extension --remote-debugging-port=2012 --flag-switches-begin --debug-packed-apps --silent-debugger-extension-api --flag-switches-end",
-    "kill-browser": "pkill -f vivaldi-snapshot"
+    "kill-browser": "pkill -f vivaldi-snapshot",
+    "copy-userscript": "cp -f dist/treetabs.js /opt/vivaldi-snapshot/resources/vivaldi/"
   },
   "standard": {
     "globals": [
@@ -40,6 +41,7 @@
     "gulp-less": "3.x.x",
     "gulp-livereload": "3.x.x",
     "gulp-plumber": "1.x.x",
+    "gulp-replace": "^1.0.0",
     "gulp-sass": "^3.x.x",
     "gulp-sequence": "0.x.x",
     "gulp-sourcemaps": "^2.6.5",

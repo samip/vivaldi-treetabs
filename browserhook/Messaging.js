@@ -1,50 +1,52 @@
 class Messaging {
   constructor (port, uiControl) {
-    console.log('Connected', port)
     this.uiControl = uiControl
     this.port = port
+    this.alwaysRespond = true
 
     if (port) {
       this.port.onDisconnect.addListener(x => console.log('Disconnect', x))
       this.port.onMessage.addListener(this.onReceived.bind(this))
       this.port.postMessage('Moro ' + this.port.name)
+    } else {
+      throw new treeTabUserScriptError('Invalid port')
     }
+
   }
 
-  /*
-    Handle incoming command
-  */
+  // Handle incoming command
   onReceived (request, port) {
-    if (port.name !== this.port.name) {
-      console.error('Helvetin porteilla', port, this.port)
-    }
+    let reply = 'ACK'
 
     switch (request.command) {
-    /*
-      Indents tab by <indentLevel> steps.
-      @param tabId
-      @param indentLevel - how many steps tab needs to be indentedx
-     */
+      // Indents tab by <indentLevel> steps.
+      // @param tabId
+      // @param indentLevel - how many steps tab needs to be indentedx
       case 'IndentTab':
         this.uiControl.tab(request.tabId).indentTab(request.indentLevel)
         break
 
-    /* Show or create 'Close child tabs' button in tab strip
-     * @param TabId
-     */
+
+      // Show or create 'Close child tabs' button in tab strip
+      // @param TabId
+      //
       case 'ShowCloseChildrenButton':
         this.uiControl.tab(request.tabId).showCloseChildrenButton()
         break
 
-    /* Hide 'Close child tabs' button in tab strip
-     * @param TabId
-     */
+      //  Hide 'Close child tabs' button in tab strip
+      // @param TabId
       case 'HideCloseChildrenButton':
         this.uiControl.tab(request.tabId).hideCloseChildrenButton()
         break
       default:
+        reply = 'NACK'
         console.error('Invalid command: ' + request.command)
+        console.log(request)
         break
+    }
+    if (this.alwaysRespond) {
+      this.send(reply)
     }
   }
 
