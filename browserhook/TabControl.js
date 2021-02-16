@@ -3,14 +3,14 @@ class TabCommand {
   constructor (tabId, element) {
     this.tabId = tabId
     this.element = element
-    this.messagingFunction = null
+    this.messagingFunction = window.messaging.send
     this.queue = []
   }
 
   setMessagingFunction (messagingFunction) {
     // Used to send messages to the extension
     // usage: this.messagingFunction({command: 'closeChildTabs', tabId: 5})
-    this.messagingFunction = messagingFunction
+    this.messagingFunction = window.messaging.send
   }
 
   setElement (element) {
@@ -42,6 +42,7 @@ class TabCommand {
   }
 
   messagingFunctionValid () {
+    console.log(this.messagingFunction)
     return this.messagingFunction && typeof this.messagingFunction === 'function'
   }
 
@@ -150,7 +151,10 @@ class UIController {
     if (!this.tabs[tabId]) {
       this.tabs[tabId] = new TabCommand(tabId, this.getElement(tabId))
       this.tabs[tabId].setMessagingFunction(this.messagingFunction)
+    } else {
+      this.tabs[tabId].setElement(this.getElement(tabId))
     }
+
     return this.tabs[tabId]
   }
 
