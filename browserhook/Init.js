@@ -8,7 +8,7 @@ function initTreeTabUserScript(messagingPort) {
   window.messaging = new Messaging(messagingPort, window.uiControl)
 
   window.vivaldiUI = new VivaldiUIObserver()
-
+  window.uiControl.setMessagingFunction(msg => window.messaging.send(msg))
   window.vivaldiUI.tabContainer.addCallback('onCreated', (element) => {
     // Tab container is removed when browser enters full screen mode
     // and is rendered again when exiting full screen mode.

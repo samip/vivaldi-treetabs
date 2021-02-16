@@ -3,14 +3,13 @@ class TabCommand {
   constructor (tabId, element) {
     this.tabId = tabId
     this.element = element
-    this.messagingFunction = window.messaging.send
     this.queue = []
   }
 
   setMessagingFunction (messagingFunction) {
     // Used to send messages to the extension
     // usage: this.messagingFunction({command: 'closeChildTabs', tabId: 5})
-    this.messagingFunction = window.messaging.send
+    this.messagingFunction = messagingFunction
   }
 
   setElement (element) {
