@@ -1,4 +1,10 @@
-class VivaldiUIObserver {
+/*
+const observer = new UIObserver()
+observer.tabContainer.addCallback('onCreated', function(element))
+observer.tab.addCallback('onCreated', function(element))
+*/
+
+class UIObserver {
 
   static tabContainerElementId = 'tabs-tabbar-container'
 
@@ -88,7 +94,7 @@ class VivaldiUIObserver {
   */
 
   findTabContainerFromMutations(mutations) {
-    const isTabContainer = node => node.id === VivaldiUIObserver.tabContainerElementId
+    const isTabContainer = node => node.id === UIObserver.tabContainerElementId
 
     mutations.forEach(mutation => {
       mutation.addedNodes.forEach(node => {
@@ -104,7 +110,7 @@ class VivaldiUIObserver {
   }
 
   findTabContainerFromDocument() {
-    return document.getElementById(VivaldiUIObserver.tabContainerElementId)
+    return document.getElementById(UIObserver.tabContainerElementId)
   }
 
   findTabsFromMutations(mutations) {

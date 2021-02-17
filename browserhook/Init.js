@@ -7,7 +7,7 @@ function initTreeTabUserScript(messagingPort) {
   window.uiControl = new UIController()
   window.messaging = new Messaging(messagingPort, window.uiControl)
 
-  window.vivaldiUI = new VivaldiUIObserver()
+  window.vivaldiUI = new UIObserver()
   window.uiControl.setMessagingFunction(msg => window.messaging.send(msg))
   window.vivaldiUI.tabContainer.addCallback('onCreated', (element) => {
     // Tab container is removed when browser enters full screen mode
@@ -29,12 +29,6 @@ function initTreeTabUserScript(messagingPort) {
   window.messaging = messaging
   window.vivaldiUI = vivaldiUI
   window.uiControl = uiControl
-  // For debugging
-  return {
-    vivaldiUI: window.vivaldiUI,
-    messaging: window.messaging,
-    uiControl: window.uiControl
-  }
 }
 
 class treeTabUserScriptError extends Error {
@@ -51,9 +45,3 @@ chrome.runtime.onConnectExternal.addListener(port => {
     initTreeTabUserScript(port)
   }
 })
-
-window.addEventListener('DOMContentLoaded', (event) => {
-  console.log(window)
-  console.log(event)
-  console.log('DOM fully loaded and parsed');
-});
