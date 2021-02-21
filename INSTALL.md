@@ -1,7 +1,7 @@
 **Installation**
 *User script*
 - Copy `treetabs.js` to `$vivaldi_install_dir/resources/vivaldi/`
-- Add `<script src="treetabs.js"></script>` before `</body>` tag
+- Add `<script src="treetabs.js"></script>` before `</body>` tag in `$vivaldi_install_dir/resources/vivaldi/browser.html`
 
 *Extension*
 - Go to `vivaldi://extensions`
