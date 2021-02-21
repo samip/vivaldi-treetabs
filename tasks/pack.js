@@ -17,7 +17,7 @@ gulp.task('pack', ['build'], () => {
   let name = packageDetails.name
   let version = packageDetails.version
   let filetype = getPackFileType()
-  let filename = `${name}-${version}-${args.vendor}${filetype}`
+  let filename = `${name}-${version}${filetype}`
   return gulp.src(`dist/**/*`)
     .pipe(zip(filename))
     .pipe(gulp.dest('./packages'))

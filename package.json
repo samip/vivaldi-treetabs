@@ -1,7 +1,7 @@
 {
   "name": "vivaldi-tree-tabs",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Vivaldi tree tab extension",
   "scripts": {
     "start": "npm run dev:chrome",
