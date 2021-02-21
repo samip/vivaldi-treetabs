@@ -73,8 +73,8 @@ class TabCommand {
 
   showCloseChildrenButton () {
     if (!this.messagingFunctionValid()) {
-      console.error('Skipping showCloseChildrenButton... invalid messageFunction')
-      return this
+      // console.error('Skipping showCloseChildrenButton... invalid messageFunction')
+      // return this
     }
 
     if (!this.element) {
@@ -97,7 +97,8 @@ class TabCommand {
     closeChildrenButton.innerHTML = TabCommand.getCloseChildrenButtonSVG()
 
     closeChildrenButton.addEventListener('click', (_event) => {
-      this.messagingFunction({command: 'CloseChildren', tabId: this.tabId})
+      // this.messagingFunction({command: 'CloseChildren', tabId: this.tabId})
+      window.messaing.send({command: 'CloseChildren', tabId: this.tabID})
     })
     closeButton.parentNode.insertBefore(closeChildrenButton, closeButton)
     return this

@@ -95,7 +95,8 @@ export default class Tab {
     parent.children.add(this)
     this.parent = parent
     // Has children now -> show close children button
-    if (!parent.isRoot && !parent.closeChildrenButtonVisible) {
+    // if (!parent.isRoot && !parent.closeChildrenButtonVisible) {
+    if (!parent.isRoot) {
       parent.showCloseChildrenButton()
     }
 
