@@ -98,7 +98,7 @@ class TabCommand {
 
     closeChildrenButton.addEventListener('click', (_event) => {
       // this.messagingFunction({command: 'CloseChildren', tabId: this.tabId})
-      window.messaing.send({command: 'CloseChildren', tabId: this.tabID})
+      window.messaging.send({command: 'CloseChildren', tabId: this.tabId})
     })
     closeButton.parentNode.insertBefore(closeChildrenButton, closeButton)
     return this

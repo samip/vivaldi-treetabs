@@ -59,37 +59,8 @@ cp "$dir/resources/vivaldi/browser.html" "$dir/resources/vivaldi/browser.html-$(
 alreadypatched=$(grep '<script src="treetabs.js"><\/script>' $dir/resources/vivaldi/browser.html);
 if [ "$alreadypatched" = "" ] ; then
     echo patching browser.html
-	sed -i -e 's/<\/body>/<script src="treetabs.js"><\/body>/' "$dir/resources/vivaldi/browser.html"
+	sed -i -e 's/<\/body>/<script src="treetabs.js"><\/<script><\/body>/' "$dir/resources/vivaldi/browser.html"
 
 else
     echo "browser.html has already been patched!"
-fi
-
-
-if [ -f "$mod_dir/TabControl.js" ] ; then
-    echo copying TabControl.js
-    cp -f "$mod_dir/TabControl.js" "$dir/resources/vivaldi/TabControl.js"
-else
-    echo observer.js missing in $mod_dir
-fi
-
-if [ -f "$mod_dir/Messaging.js" ] ; then
-    echo copying Messaging.js
-    cp -f "$mod_dir/Messaging.js" "$dir/resources/vivaldi/Messaging.js"
-else
-    echo Messaging.js missing in $mod_dir
-fi
-
-if [ -f "$mod_dir/VivaldiUIObserver.js" ] ; then
-    echo copying VivaldiUIObserver.js
-    cp -f "$mod_dir/VivaldiUIObserver.js" "$dir/resources/vivaldi/VivaldiUIObserver.js"
-else
-    echo VivaldiUIObserver.js missing in $mod_dir
-fi
-
-if [ -f "$mod_dir/Init.js" ] ; then
-    echo copying Init.js
-    cp -f "$mod_dir/Init.js" "$dir/resources/vivaldi/Init.js"
-else
-    echo Init.js missing in $mod_dir
 fi
