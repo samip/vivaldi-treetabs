@@ -13,12 +13,8 @@ class WindowContainer {
     this.windows.set(key, window)
   }
 
-  get(id:number): Window {
-    const window = this.windows.get(id)
-    if (!window) {
-      throw new Error(`WindowContainer: access to missing element. id: ${id}`)
-    }
-    return window
+  get(id:number): Window | undefined {
+    return this.windows.get(id)
   }
 
   remove(window:Window) {

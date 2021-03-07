@@ -34,7 +34,16 @@ export default class Connection {
     if (message == 'OK') {
       this._isActive = true
     } else if (message.log) {
-      console.log('Userscript:', message.log)
+      const logLevels = ['INFO', 'DEBUG', 'VERBOSE']
+      const [first, ...rest] = message.log[0]
+      if (logLevels.includes(first)) {
+        if (message.log[0] === 'INFO' || message.log[0] === 'DEBUG') {
+          console.log('Userscript:', rest)
+        }
+      } else {
+        console.table('Userscript:', message.log)
+      }
+
     } else if (message.command) {
       Command.onReceived(message)
     }
