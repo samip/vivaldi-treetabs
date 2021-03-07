@@ -1,52 +1,10 @@
-class TabCommand {
+class TabController extends UIController {
 
   constructor (tabId, element) {
+    super()
     this.tabId = tabId
     this.element = element
-    this.queue = []
     this.hasChildren = false
-  }
-
-  setElement (element) {
-    this.element = element
-    return this
-  }
-
-  runQueuedCommands (_element) {
-    // Make sure button is shown after tab button is re-rendered
-    // TODO: move elsewhere
-    if (this.hasChildren && !this.commandIsQueued('showCloseChildrenButton')) {
-      this.queueCommand('showCloseChildrenButton')
-    } else if (!this.hasChildren && !this.commandIsQueued('hideCloseChildrenButton')) {
-      this.queueCommand('hideCloseChildrenButton')
-    }
-
-    while (this.queue.length) {
-      // Execute command and delete it from queue
-      let cmd = this.queue.shift()
-      this[cmd.command](cmd.args)
-    }
-  }
-
-  queueCommand (command, args) {
-    args = args || []
-
-    const argsArray = []
-    for (let i = 0; i < args.length; i++) {
-      argsArray.push(args[i])
-    }
-
-    this.queue.push({
-      command: command,
-      args: argsArray
-    })
-
-    extLog('Command added to queueu:' + command)
-    return this
-  }
-
-  commandIsQueued (command) {
-    return this.queue.find(x => x.command == command) !== undefined
   }
 
   // --------------
@@ -61,8 +19,8 @@ class TabCommand {
     const indentValue = this.indentationCSSValue(indentLevel)
     const indentAttribute = this.indentationOption('attribute')
 
-    extLog('Indenting #' + this.tabId +' with attribute/value',
-      indentAttribute, indentValue)
+    // extLog('DEBUG', 'Indenting #' + this.tabId +' with attribute/value',
+      // indentAttribute, indentValue)
 
     this.element.parentElement.style[indentAttribute] = indentValue
     return this
@@ -98,14 +56,14 @@ class TabCommand {
 
     if (existingButton) {
       existingButton.style.visibility = 'initial'
-      extLog('Setting show close children button back visbile')
+      extLog('DEBUG', 'Setting an existing CloseChildrenButton visible')
     } else {
       const closeChildrenButton = this.createCloseChildrenButton()
       closeButton.parentNode.insertBefore(closeChildrenButton, closeButton)
-      extLog('showCloseChildrenButton created for element')
+      extLog('DEBUG', 'CloseChildrenButton created for element')
     }
 
-    extLog('debug', 'Showing close children button')
+    extLog('DEBUG', 'Showing close children button')
     return this
   }
 
@@ -116,12 +74,12 @@ class TabCommand {
     }
 
     const buttonClass = this.closeAllChildrenButtonClass()
-    const closeChildrenButton = this.element.querySelector('.' + buttonClass)
-    if (closeChildrenButton) {
-      closeChildrenButton.style.visibility = 'hidden'
+    const button = this.element.querySelector('.' + buttonClass)
+    if (button) {
+      button.style.visibility = 'hidden'
     }
 
-    extLog('debug', 'Hiding close children button')
+    extLog('DEBUG', 'Hiding close children button')
     return this
   }
 
@@ -132,10 +90,14 @@ class TabCommand {
     element.title = 'Close child tabs'
     element.classList.add('close')
     element.classList.add(buttonClass)
-    element.innerHTML = TabCommand.closeChildrenButtonSVG()
+    element.innerHTML = TabController.closeChildrenButtonSVG()
 
     element.addEventListener('click', (_event) => {
-      window.treeTabs.messaging.send({ command: 'CloseChildren', tabId: this.tabId })
+      console.log(this, this.messagingFunction)
+      this.messagingFunction({
+        command: 'CloseChildren',
+        tabId: this.tabId
+      })
     })
 
     return element

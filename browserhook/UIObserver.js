@@ -1,4 +1,8 @@
 /*
+Observes vivaldi's UI for changes, run callback when:
+- Tab is created or tabContainer is created/destroyed
+
+
 usage:
 const observer = new UIObserver()
 observer.tabContainer.addCallback('onCreated', function(element))
@@ -6,8 +10,6 @@ observer.tab.addCallback('onCreated', function(element))
 */
 
 class UIObserver {
-
-  static tabContainerElementId = 'tabs-tabbar-container'
 
   constructor() {
     this.tabContainerObserver = null
@@ -77,14 +79,14 @@ class UIObserver {
         element => this.initTabObserver(element),
         error => console.error(error)
       )
-    window.messaging.log('UIObserver: tabContainer created')
+    extLog('UIObserver: tabContainer created')
   }
 
   onTabContainerRemoved(tabContainerElement) {
     this.tabContainer.eventHandlers['onRemoved']
         .forEach(eventHandler => eventHandler(tabContainerElement))
 
-    window.messaging.log('UIObserver: tabContainer removed')
+    extLog('UIObserver: tabContainer removed')
   }
 
   onTabCreated(tabElement)  {
@@ -100,8 +102,6 @@ class UIObserver {
         eventHandler(tabElement, id)
       )
     }
-
-    false && window.messaging.log('UIObserver: tab #' + id + ' created')
   }
 
   // -------------------
@@ -109,7 +109,7 @@ class UIObserver {
   // -------------------
 
   findTabContainerFromMutations(mutations) {
-    const isTabContainer = node => node.id === UIObserver.tabContainerElementId
+    const isTabContainer = node => node.id === this.tabContainerElementId()
 
     mutations.forEach(mutation => {
       mutation.addedNodes.forEach(node => {
@@ -125,7 +125,7 @@ class UIObserver {
   }
 
   findTabContainerFromDocument() {
-    return document.getElementById(UIObserver.tabContainerElementId)
+    return document.getElementById(this.tabContainerElementId())
   }
 
   findTabsFromMutations(mutations) {
@@ -137,6 +137,10 @@ class UIObserver {
         tabDiv && this.onTabCreated(tabDiv)
       })
     })
+  }
+
+  tabContainerElementId() {
+    return 'tabs-tabbar-container'
   }
 }
 

@@ -2,16 +2,56 @@ class UIController {
 
   constructor () {
     this.tabs = {}
+    this.queue = []
+    this.messagingFunction = null
   }
 
   tab (tabId) {
-    if (!this.tabs[tabId]) {
-      this.tabs[tabId] = new TabCommand(tabId, this.getElement(tabId))
-    } else {
+    if (this.tabs[tabId]) {
       this.tabs[tabId].setElement(this.getElement(tabId))
+    } else {
+      this.tabs[tabId] = new TabController(tabId, this.getElement(tabId))
+      this.tabs[tabId].setMessagingFunction(this.messagingFunction)
+    }
+    return this.tabs[tabId]
+  }
+
+  setElement (element) {
+    this.element = element
+    return this
+  }
+
+  setMessagingFunction (fn) {
+    this.messagingFunction = fn
+  }
+
+  commandIsQueued (command) {
+    return this.queue.find(x => x.command === command) !== undefined
+  }
+
+  runQueuedCommands (_element) {
+    while (this.queue.length) {
+      // execute command and delete it from queue
+      let cmd = this.queue.shift()
+      this[cmd.command](cmd.args)
+    }
+  }
+
+  queueCommand (command, args) {
+    args = args || []
+
+    const argsArray = []
+    for (let i = 0; i < args.length; i++) {
+      argsArray.push(args[i])
     }
 
-    return this.tabs[tabId]
+    this.queue.push({
+      command: command,
+      args: argsArray
+    })
+
+    extLog('INFO', 'Command added to queue:' + command)
+    return this
   }
 
   showRefreshViewButton () {
@@ -19,7 +59,7 @@ class UIController {
     // Busted
     const existing = document.getElementById(buttonId)
     if (existing) {
-      extLog('Skipping show refresh view button.. button already rendered')
+      extLog('DEBUG', 'Skipping show refresh view button.. button already rendered')
       return this
     }
 
@@ -32,12 +72,13 @@ class UIController {
 
   createRefreshViewButton() {
     const button = document.createElement('button')
-
     button.innerText = 'Refresh'
     button.id = 'refresh-tab-tree'
     button.classList = 'button-toolbar refresh-tab-tree'
 
     button.addEventListener('click', (_event) => {
+      // !!!
+      console.log(this, this.messagingFunction)
       window.treeTabs.messaging.send({ command: 'RenderAllTabs' })
     })
 
