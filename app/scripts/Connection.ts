@@ -61,7 +61,7 @@ export default class Connection {
 
     if (chrome.runtime.lastError) {
       throw new Error('Connect failed to browser.html.'
-        + 'Is browserhook installed? chrome.runtime.lastError: '
+        + 'Is the userscript installed? chrome.runtime.lastError: '
         + chrome.runtime.lastError)
     } else {
       this.addListeners()

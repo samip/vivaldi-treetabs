@@ -1,4 +1,4 @@
-import 'chromereload/devonly' // Remove this before building
+// import 'chromereload/devonly' // Remove this before building
 import Tab from './Tab'
 import {tabContainer} from './TabContainer'
 import {windowContainer} from './WindowContainer'
@@ -41,7 +41,7 @@ class ChromeCallbacks {
 
       // This lags sometimes.
       // TODO: keep track of tab order to avoid api call?
-      // TODO: Figure out what this does and rewrite
+      // TODO: rewrite
       root.children.tabs.forEach((item) => {
         // get current index
         chrome.tabs.get(item.id, (tab:chrome.tabs.Tab) => {
@@ -115,7 +115,7 @@ class ChromeCallbacks {
   static onWindowCreated(chromeWindow:chrome.windows.Window) {
     const window = Window.init(chromeWindow)
     // Connect only when needed to avoid race conditions
-    // (window is not really to process messaging immediately)
+    // (window is not ready to process immediately)
     // window.connect()
     windowContainer.add(window)
   }
@@ -125,7 +125,7 @@ class ChromeCallbacks {
       const window = windowContainer.get(windowId)
     windowContainer.remove(window)
     } catch (error) {
-      console.error(windowId + ' was not in container')
+      console.error(`${windowId} was not in container`)
     }
   }
 }

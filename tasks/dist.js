@@ -7,7 +7,7 @@ gulp.task('dist', gulpSequence(
     'images',
     'scripts',
     'locales',
-    'hook',
+    'userscript',
     'instruction',
     'pack'
   ]

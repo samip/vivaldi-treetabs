@@ -47,7 +47,7 @@ export default class Tab {
     })
   }
 
-  // Send tab specific command to Browserhook
+  // Send tab specific command to userscript
   command(command: string, parameters: any = {}): void {
     parameters['tabId'] = this.id
     const cmd = new Command(command, parameters)

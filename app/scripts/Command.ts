@@ -28,7 +28,7 @@ export default class Command {
 
     const success = window.connection.sendMessage(parameters)
     if (!success) {
-      console.error('Command couldn\'t be sent')
+      console.error('Command could not be sent')
     }
 
     if (this.logEnabled) {
@@ -38,7 +38,7 @@ export default class Command {
     }
   }
 
-  // Commands received from browserhook
+  // Commands received from userscript
   static onReceived(request: any) {
     console.log('Command received', request)
 

@@ -7,7 +7,7 @@ gulp.task('build', gulpSequence(
     'images',
     'locales',
     'scripts',
-    'hook',
+    'userscript',
     'chromereload'
   ]
 ))
