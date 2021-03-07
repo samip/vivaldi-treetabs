@@ -12,7 +12,8 @@ class ChromeCallbacks {
 
     // child tab created -> set parent and indent.
     if (chromeTab.openerTabId) {
-      const parentTab = tabContainer.get(chromeTab.openerTabId)
+      const parentTab = tabContainer.tryGet(chromeTab.openerTabId)
+      if (!parentTab) return
       tab.parentTo(parentTab)
       tab.renderIndentation()
     }
@@ -24,7 +25,9 @@ class ChromeCallbacks {
   }
 
   static onTabMoved(tabId:number, info:chrome.tabs.TabMoveInfo) {
-    const tab:Tab = tabContainer.get(tabId)
+    const tab = tabContainer.tryGet(tabId)
+    if (!tab) return
+
     const root:Tab = tab.getWindow().root
 
     // whether this was final move event made by Vivaldi
@@ -65,7 +68,7 @@ class ChromeCallbacks {
   }
 
   static onTabRemoved(tabId:number) {
-    const tab = tabContainer.get(tabId)
+    const tab = tabContainer.tryGet(tabId)
     if (!tab) return
 
     tab.remove()
@@ -74,7 +77,7 @@ class ChromeCallbacks {
 
   // Tab moved to new window -> reparent to new Window's root
   static onTabAttached(tabId:number, info:chrome.tabs.TabAttachInfo) {
-    const tab = tabContainer.get(tabId)
+    const tab = tabContainer.tryGet(tabId)
     if (!tab) return
 
     const newWindow = windowContainer.get(info.newWindowId)
@@ -84,7 +87,7 @@ class ChromeCallbacks {
 
   // move children to new window with their parent?
   static onTabDetached(tabId:number, _info:chrome.tabs.TabDetachInfo) {
-    const tab = tabContainer.get(tabId)
+    const tab = tabContainer.tryGet(tabId)
     if (!tab) return
 
     tab.children.tabs.forEach((child: Tab) => {
@@ -95,16 +98,17 @@ class ChromeCallbacks {
 
   // https://developer.chrome.com/docs/extensions/reference/tabs/#event-onUpdated
   static onTabUpdated(tabId:number, info:chrome.tabs.TabChangeInfo) {
-    const tab = tabContainer.get(tabId)
+    const tab = tabContainer.tryGet(tabId)
     if (info.pinned && tab) {
       // Tab pinned -> parent children to tab's parent
       tab.children.applyAll((child: Tab) => {
         child.parentTo(tab.parent)
         child.renderIndentation()
       })
-      tab.parentTo(tab.getWindow().root)
 
-      // TODO: fix problems when an intended tab is pinned
+      // Parent tab to it's new root wndow root
+      tab.parentTo(tab.getWindow().root)
+      tab.renderIndentation()
     }
   }
 
@@ -117,8 +121,12 @@ class ChromeCallbacks {
   }
 
   static onWindowRemoved(windowId:number) {
-    const window = windowContainer.get(windowId)
+    try {
+      const window = windowContainer.get(windowId)
     windowContainer.remove(window)
+    } catch (error) {
+      console.error(windowId + ' was not in container')
+    }
   }
 }
 

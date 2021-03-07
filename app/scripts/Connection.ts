@@ -31,11 +31,10 @@ export default class Connection {
 
   onMessage(message: any, _port:chrome.runtime.Port) {
     // TODO: Command parsing + definitions
-
     if (message == 'OK') {
       this._isActive = true
-    } else if (message == 'ACK' || message == 'NACK') {
-      console.log('Extension reply : ' + message)
+    } else if (message.log) {
+      console.log('Userscript:', message.log)
     } else if (message.command) {
       Command.onReceived(message)
     }

@@ -1,4 +1,5 @@
 /*
+usage:
 const observer = new UIObserver()
 observer.tabContainer.addCallback('onCreated', function(element))
 observer.tab.addCallback('onCreated', function(element))
@@ -33,7 +34,7 @@ class UIObserver {
   }
 
   init() {
-    waitForElement('#main > .inner', 5000)
+    waitForElement('#main > .inner')
       .then(tabContainerParent => {
           this.initTabContainerObserver(tabContainerParent)
           const tabContainer = this.findTabContainerFromDocument()
@@ -44,36 +45,46 @@ class UIObserver {
   }
 
   initTabContainerObserver(tabContainerParent) {
-    this.tabContainerObserver = new MutationObserver(this.findTabContainerFromMutations.bind(this))
-    this.tabContainerObserver.observe(tabContainerParent, {
-      attributes: false,
-      childList: true,
-      characterData: false
-    })
+    this.tabContainerObserver = new MutationObserver(
+      this.findTabContainerFromMutations.bind(this)
+    )
+
+    this.tabContainerObserver.observe(tabContainerParent, this.observerSettings())
   }
 
   initTabObserver(tabStripElement) {
-    this.tabObserver = new MutationObserver(this.findTabsFromMutations.bind(this))
-    this.tabObserver.observe(tabStripElement, {
+    this.tabObserver = new MutationObserver(
+      this.findTabsFromMutations.bind(this)
+    )
+    this.tabObserver.observe(tabStripElement, this.observerSettings())
+  }
+
+  observerSettings() {
+    return {
       attributes: false,
       childList: true,
       characterData: false
-    })
+    }
   }
 
   onTabContainerCreated(tabContainerElement) {
-    this.tabContainer.eventHandlers['onCreated'].forEach(eventHandler => eventHandler(tabContainerElement))
+    this.tabContainer.eventHandlers['onCreated']
+         .forEach(eventHandler => eventHandler(tabContainerElement))
 
     // TODO: avoid searching whole document, use tabContainerElement instead
-    waitForElement('.tab-strip', 5000)
+    waitForElement('.tab-strip')
       .then(
         element => this.initTabObserver(element),
         error => console.error(error)
       )
+    window.messaging.log('UIObserver: tabContainer created')
   }
 
   onTabContainerRemoved(tabContainerElement) {
-    this.tabContainer.eventHandlers['onRemoved'].forEach(eventHandler => eventHandler(tabContainerElement))
+    this.tabContainer.eventHandlers['onRemoved']
+        .forEach(eventHandler => eventHandler(tabContainerElement))
+
+    window.messaging.log('UIObserver: tabContainer removed')
   }
 
   onTabCreated(tabElement)  {
@@ -84,14 +95,18 @@ class UIObserver {
     }
 
     const id = getTabId(tabElement)
-    id && this.tab.eventHandlers.onCreated.forEach(eventHandler => eventHandler(tabElement, id))
+    if (id) {
+      this.tab.eventHandlers.onCreated.forEach(eventHandler =>
+        eventHandler(tabElement, id)
+      )
+    }
+
+    false && window.messaging.log('UIObserver: tab #' + id + ' created')
   }
 
-  /*
-  -------------------
-  | Finder methods
-  -------------------
-  */
+  // -------------------
+  // Finder methods
+  // -------------------
 
   findTabContainerFromMutations(mutations) {
     const isTabContainer = node => node.id === UIObserver.tabContainerElementId
@@ -127,6 +142,8 @@ class UIObserver {
 
 
 function waitForElement(selector, rejectAfterMs) {
+  rejectAfterMs = rejectAfterMs || 5000
+
   return new Promise((resolve, reject) => {
     let element = document.querySelector(selector)
     if (element) {

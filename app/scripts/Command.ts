@@ -44,8 +44,10 @@ export default class Command {
 
     switch (request.command) {
     case 'CloseChildren':
-      let tab = tabContainer.get(request.tabId)
-      tab.removeChildren()
+      let tab = tabContainer.tryGet(request.tabId)
+      if (tab) {
+        tab.removeChildren()
+      }
       break
     case 'RenderAllTabs':
       tabContainer.applyAll((tab: any) => tab.renderEverything())

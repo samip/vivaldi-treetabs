@@ -15,8 +15,6 @@ export default class Tab {
   initialIndex: number
   isRoot: boolean
 
-  private closeChildrenButtonVisible: boolean
-
   constructor(chromeTab?: chrome.tabs.Tab) {
     if (chromeTab) {
       if (chromeTab.id) {
@@ -34,7 +32,6 @@ export default class Tab {
       this.id = 0
     }
     this.children = new TabContainer()
-    this.closeChildrenButtonVisible = false
   }
 
   // Call function on every child (but not children of children)
@@ -50,14 +47,12 @@ export default class Tab {
     })
   }
 
-
   // Send tab specific command to Browserhook
   command(command: string, parameters: any = {}): void {
     parameters['tabId'] = this.id
     const cmd = new Command(command, parameters)
     cmd.send(this.getWindow())
   }
-
 
   // Traverse to root, return distance / depth / indentlevel  **/
   /* eg:
@@ -99,7 +94,6 @@ export default class Tab {
     if (!parent.isRoot) {
       parent.showCloseChildrenButton()
     }
-
     return this
   }
 
@@ -121,6 +115,7 @@ export default class Tab {
     if (!this.parent.isRoot && this.parent.children.isEmpty()) {
       this.parent.hideCloseChildrenButton()
     }
+    this.command('FlushData')
   }
 
   removeChildren(): void {
@@ -142,17 +137,16 @@ export default class Tab {
 
   showCloseChildrenButton(): void {
     this.command('ShowCloseChildrenButton')
-    this.closeChildrenButtonVisible = true
   }
 
   hideCloseChildrenButton(): void {
     this.command('HideCloseChildrenButton')
-    this.closeChildrenButtonVisible = false
   }
 
   renderIndentation(): void {
     const depth = this.depth()
-    this.command('IndentTab', {'indentLevel': depth})
+    let a = this.command('IndentTab', {'indentLevel': depth})
+    console.log(a)
   }
 
 }

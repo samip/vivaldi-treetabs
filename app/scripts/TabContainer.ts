@@ -22,6 +22,14 @@ export class TabContainer {
     return tab
   }
 
+  tryGet(id:number): Tab | undefined {
+    try {
+      return this.get(id)
+    } catch (error) {
+      return undefined
+    }
+  }
+
   applyAll(callback: TabCallback): void {
     this.tabs.forEach((tab:Tab) => callback(tab))
   }

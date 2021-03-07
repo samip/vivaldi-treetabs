@@ -1,24 +1,21 @@
 class Messaging {
+
   constructor (port, uiControl) {
     this.uiControl = uiControl
     this.port = port
-    this.alwaysRespond = true
 
     if (port) {
-      this.port.onDisconnect.addListener(x => console.log('Disconnect', x))
+      this.port.onDisconnect.addListener(port => console.log('Disconnect', port))
       this.port.onMessage.addListener(this.onReceived.bind(this))
-      this.port.postMessage('Moro ' + this.port.name)
     } else {
-      throw new treeTabUserScriptError('Invalid port')
+      throw new treeTabUserScriptError('Connection failed to extension failed')
     }
-
   }
 
   // Handle incoming command
-  onReceived (request, port) {
-    let reply = 'ACK'
-
+  onReceived (request, _port) {
     switch (request.command) {
+
       // Indents tab by <indentLevel> steps.
       // @param tabId
       // @param indentLevel - how many steps tab needs to be indentedx
@@ -26,27 +23,26 @@ class Messaging {
         this.uiControl.tab(request.tabId).indentTab(request.indentLevel)
         break
 
-
       // Show or create 'Close child tabs' button in tab strip
-      // @param TabId
-      //
+      // @param tabId
       case 'ShowCloseChildrenButton':
         this.uiControl.tab(request.tabId).showCloseChildrenButton()
         break
 
-      //  Hide 'Close child tabs' button in tab strip
-      // @param TabId
+      //Hide 'Close child tabs' button in tab strip
+      // @param tabId
       case 'HideCloseChildrenButton':
         this.uiControl.tab(request.tabId).hideCloseChildrenButton()
         break
-      default:
-        reply = 'NACK'
-        console.error('Invalid command: ' + request.command)
-        console.log(request)
+
+      // Delete tab-specific data after tab has been closed
+      // @param tabId
+      case 'FlushData':
+        delete this.uiControl.tabs[request.tabId]
         break
-    }
-    if (this.alwaysRespond) {
-      this.send(reply)
+      default:
+        extLog('Invalid command', request.command)
+        break
     }
   }
 
@@ -61,7 +57,10 @@ class Messaging {
     }
   }
 
-  log (logMessage, level) {
-    this.send({command: 'log', message: logMessage, level: level})
+  // Send log back to extension
+  // Usage: window.messaging.log('what', 'ever', 33, { b:0 })
+  log () {
+    console.log.apply(console, arguments)
+    this.send({log: arguments})
   }
 }

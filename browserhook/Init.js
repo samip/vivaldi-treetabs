@@ -1,34 +1,31 @@
-function log(...args) {
-  messaging.send(...args)
-}
-
 function initTreeTabUserScript(messagingPort) {
   console.log('https://github.com/samip/vivaldi-treetabs user script initialized')
-  window.uiControl = new UIController()
-  window.messaging = new Messaging(messagingPort, window.uiControl)
+  const uiController = new UIController()
+  const messaging = new Messaging(messagingPort, window.uiControl)
+  const uiObserver = new UIObserver()
 
-  window.vivaldiUI = new UIObserver()
-  window.uiControl.setMessagingFunction(msg => window.messaging.send(msg))
-  window.vivaldiUI.tabContainer.addCallback('onCreated', (element) => {
+  uiObserver.tabContainer.addCallback('onCreated', (_element) => {
     // Tab container is removed when browser enters full screen mode
     // and is rendered again when exiting full screen mode.
     // Ask extension to re-render tab indentantions after Tab container is created.
-    window.messaging.send({command: 'RenderAllTabs'})
-    window.uiControl.showRefreshViewButton()
+    messaging.send({command: 'RenderAllTabs'})
+    // uiController.showRefreshViewButton()
   })
 
-  window.vivaldiUI.tab.addCallback('onCreated', (element, tabId) => {
+  uiObserver.tab.addCallback('onCreated', (element, tabId) => {
     // Commands were given to tab from extension before tab element
     // was rendered in UI, run them now.
-    window.uiControl.tab(tabId).setElement(element)
-    window.uiControl.tab(tabId).runQueuedCommands(element)
+    uiController.tab(tabId).setElement(element)
+    uiController.tab(tabId).runQueuedCommands(element)
   })
 
-  window.vivaldiUI.init()
+  uiObserver.init()
 
-  window.messaging = messaging
-  window.vivaldiUI = vivaldiUI
-  window.uiControl = uiControl
+  window.treeTabs = {
+    messaging: messaging,
+    uiObserver: uiObserver,
+    uiController: uiController
+  }
 }
 
 class treeTabUserScriptError extends Error {
@@ -38,10 +35,21 @@ class treeTabUserScriptError extends Error {
   }
 }
 
+function extLog() {
+  window.treeTabs.messaging.log(arguments)
+}
+
+
 chrome.runtime.onConnectExternal.addListener(port => {
   const windowId = window.vivaldiWindowId
-  if (port.name === 'window-' + windowId) {
+  const portIsForCurrentWindow = port.name === 'window-' + windowId
+
+  if (portIsForCurrentWindow) {
     console.info('Messaging port for new window', port.name)
-    initTreeTabUserScript(port)
+    try {
+      initTreeTabUserScript(port)
+    } catch (e) {
+      extLog(e.message)
+    }
   }
 })

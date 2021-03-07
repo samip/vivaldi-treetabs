@@ -2,7 +2,6 @@ class UIController {
 
   constructor () {
     this.tabs = {}
-    this.messagingFunction = null
   }
 
   tab (tabId) {
@@ -20,11 +19,18 @@ class UIController {
     // Busted
     const existing = document.getElementById(buttonId)
     if (existing) {
-      window.messaging.log('Skipping show refresh view button.. button already rendered')
+      extLog('Skipping show refresh view button.. button already rendered')
       return this
     }
 
     const target = document.querySelector('#tabs-container > .toolbar')
+    const button = this.createRefreshViewButton()
+    target.appendChild(button)
+    extLog('refreshButton rendered')
+    return this
+  }
+
+  createRefreshViewButton() {
     const button = document.createElement('button')
 
     button.innerText = 'Refresh'
@@ -32,15 +38,13 @@ class UIController {
     button.classList = 'button-toolbar refresh-tab-tree'
 
     button.addEventListener('click', (_event) => {
-      window.send({ command: 'RenderAllTabs' })
+      window.treeTabs.messaging.send({ command: 'RenderAllTabs' })
     })
 
-    target.appendChild(button)
-    return this
+    return button
   }
 
   getElement (tabId) {
     return document.getElementById('tab-' + tabId)
   }
-
 }
