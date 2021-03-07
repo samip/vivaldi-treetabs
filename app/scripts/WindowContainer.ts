@@ -16,7 +16,7 @@ class WindowContainer {
   get(id:number): Window {
     const window = this.windows.get(id)
     if (!window) {
-      throw new Error('WindowContainer: access to missing element. id:  ' + id)
+      throw new Error(`WindowContainer: access to missing element. id: ${id}`)
     }
     return window
   }
@@ -29,6 +29,7 @@ class WindowContainer {
     windows.forEach((chromeWindow:chrome.windows.Window) => {
       // connect() doesn't work here due to a race-condition with messaging.
       // Try connecting when the message-bridge is actually needed; Command#send()
+      // TODO: connect from userscript instead
       const window = Window.init(chromeWindow)
       this.add(window)
     })

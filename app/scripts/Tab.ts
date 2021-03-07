@@ -86,7 +86,6 @@ export default class Tab {
   }
 
   parentTo(parent: Tab): Tab {
-    // Add tab to new parent's child list
     parent.children.add(this)
     this.parent = parent
     // Has children now -> show close children button
@@ -115,9 +114,10 @@ export default class Tab {
     if (!this.parent.isRoot && this.parent.children.isEmpty()) {
       this.parent.hideCloseChildrenButton()
     }
-    this.command('FlushData')
+    this.flushData()
   }
 
+  // Tab commands, todo: move to own file
   removeChildren(): void {
     this.applyDescendants((child: Tab) => {
       chrome.tabs.remove(child.id)
@@ -125,6 +125,10 @@ export default class Tab {
         console.log('Error on removeChildren')
       }
     })
+  }
+
+  flushData(): void {
+    this.command('FlushData')
   }
 
   // Called on each tab after tab container reappear is redrawn.
@@ -145,8 +149,7 @@ export default class Tab {
 
   renderIndentation(): void {
     const depth = this.depth()
-    let a = this.command('IndentTab', {'indentLevel': depth})
-    console.log(a)
+    this.command('IndentTab', {indentLevel: depth})
   }
 
 }

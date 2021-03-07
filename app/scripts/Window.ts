@@ -18,7 +18,7 @@ export default class Window {
     return new Window(chromeWindow.id, chromeWindow)
   }
 
-  // Open messaging port between browser window and extension
+  // Open a messaging port between window specific userscript instance and this extension
   connect() {
     const portName = `window-${this.id}`
     this.connection = new Connection()

@@ -53,7 +53,7 @@ export default class Command {
       tabContainer.applyAll((tab: any) => tab.renderEverything())
       break
     default:
-      console.error('Unknown command: ' + request.command)
+      console.error(`Unknown command: ${request.command}`)
       break
     }
   }

@@ -17,17 +17,13 @@ export class TabContainer {
   get(id:number): Tab {
     const tab = this.tabs.get(id)
     if (!tab) {
-      throw new Error('Invalid access for tab id' + id)
+      throw new Error(`Invalid access for tab id ${id}`)
     }
     return tab
   }
 
   tryGet(id:number): Tab | undefined {
-    try {
-      return this.get(id)
-    } catch (error) {
-      return undefined
-    }
+    return this.tabs.get(id)
   }
 
   applyAll(callback: TabCallback): void {
@@ -57,7 +53,7 @@ export class TabContainer {
 
       // Parent already in container -> set parent normally
       if (tab.openerTabId) {
-        const parent = this.get(tab.openerTabId)
+        const parent = this.tryGet(tab.openerTabId)
 
         if (parent) {
           tabObj.parentTo(parent)
