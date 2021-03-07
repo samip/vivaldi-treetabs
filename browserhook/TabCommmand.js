@@ -6,12 +6,6 @@ class TabCommand {
     this.queue = []
   }
 
-  setMessagingFunction (messagingFunction) {
-    // Used to send messages to the extension
-    // usage: this.messagingFunction({command: 'closeChildTabs', tabId: 5})
-    this.messagingFunction = messagingFunction
-  }
-
   setElement (element) {
     this.element = element
     return this
@@ -29,6 +23,7 @@ class TabCommand {
   }
 
   queueCommand (command, args) {
+    window.messaging.log('queueCommand', command, args)
     const argsArray = []
     for (let i = 0; i < args.length; i++) {
       argsArray.push(args[i])
@@ -38,11 +33,6 @@ class TabCommand {
       args: argsArray
     })
     return this
-  }
-
-  messagingFunctionValid () {
-    console.log(this.messagingFunction)
-    return this.messagingFunction && typeof this.messagingFunction === 'function'
   }
 
   // --------------
@@ -55,10 +45,11 @@ class TabCommand {
     }
 
     const indentVal = (indentLevel * this.indentationOption('step')) + this.indentationOption('unit')
-
+    const indentAttribute = this.indentationOption('attribute')
+    window.messaging.log('Indenting with values', indentAttribute, indentValue)
     if (this.element.parentElement) {
       // Setting tab elements parents's padding-left works well as of 14.2.2021
-      this.element.parentElement.style[this.indentationOption('attribute')] = indentVal
+      this.element.parentElement.style[indentAttribute] = indentVal
     }
   }
 
@@ -72,11 +63,6 @@ class TabCommand {
   }
 
   showCloseChildrenButton () {
-    if (!this.messagingFunctionValid()) {
-      // console.error('Skipping showCloseChildrenButton... invalid messageFunction')
-      // return this
-    }
-
     if (!this.element) {
       return this.queueCommand('showCloseChildrenButton', arguments)
     }
@@ -90,14 +76,13 @@ class TabCommand {
       return this
     }
 
-    const closeChildrenButton = document.createElement('button')
+    const closeChildrenButton = this.closeChildrenButton()
     closeChildrenButton.title = 'Close child tabs'
     closeChildrenButton.classList.add('close')
     closeChildrenButton.classList.add(buttonClass)
     closeChildrenButton.innerHTML = TabCommand.getCloseChildrenButtonSVG()
 
     closeChildrenButton.addEventListener('click', (_event) => {
-      // this.messagingFunction({command: 'CloseChildren', tabId: this.tabId})
       window.messaging.send({command: 'CloseChildren', tabId: this.tabId})
     })
     closeButton.parentNode.insertBefore(closeChildrenButton, closeButton)
@@ -114,6 +99,20 @@ class TabCommand {
       closeChildrenButton.style.visibility = 'hidden'
     }
     return this
+  }
+
+  childrenButtonElement () {
+    const element = document.createElement('button')
+    element.title = 'Close child tabs'
+    element.classList.add('close')
+    element.classList.add(buttonClass)
+    element.innerHTML = TabCommand.getCloseChildrenButtonSVG()
+
+    element.addEventListener('click', (_event) => {
+      window.messaging.send({command: 'CloseChildren', tabId: this.tabId})
+    })
+
+    return element
   }
 
   // icon for close children button. Vivaldi's close tab icon + three circles

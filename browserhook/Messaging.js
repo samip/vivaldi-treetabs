@@ -50,14 +50,18 @@ class Messaging {
     }
   }
 
-  send (msg) {
+  send (command) {
     if (this.port) {
-      this.port.postMessage(msg)
+      this.port.postMessage(command)
     } else {
-      console.error('Trying to send message without connection', msg)
+      console.error('Trying to send message without connection', command)
     }
     if (chrome.runtime.lastError) {
       console.log(chrome.runtime.lastError)
     }
+  }
+
+  log (logMessage, level) {
+    this.send({command: 'log', message: logMessage, level: level})
   }
 }
