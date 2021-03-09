@@ -14,7 +14,7 @@ export default class Window {
     this.root = new Tab()
   }
 
-  static init(chromeWindow:chrome.windows.Window): Window {
+  static initFromChromeWindow(chromeWindow:chrome.windows.Window): Window {
     return new Window(chromeWindow.id, chromeWindow)
   }
 

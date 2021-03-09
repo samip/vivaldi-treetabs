@@ -1,4 +1,4 @@
-import {TabContainer} from './TabContainer'
+import {TabContainer, tabContainer} from './TabContainer'
 import Command from './Command'
 import Window from './Window'
 import {windowContainer} from './WindowContainer'
@@ -34,6 +34,21 @@ export default class Tab {
     this.children = new TabContainer()
   }
 
+  static InitFromChromeTab(chromeTab: chrome.tabs.Tab): Tab {
+    const tab = new Tab(chromeTab)
+    const openerTabId = chromeTab.openerTabId
+
+    let parentNode
+    if (openerTabId) {
+      parentNode = tabContainer.getOrCreate(openerTabId, Tab.InitFromChromeTab)
+    } else {
+      parentNode = tab.getWindow().root
+    }
+
+    tab.parentTo(parentNode)
+    return tab
+  }
+
   // Call function on every child (but not children of children)
   applyChildren(callback: TabCallback): void {
     this.children.applyAll(callback)
@@ -41,7 +56,7 @@ export default class Tab {
 
   // Call function on every descendant (children, children of children
   applyDescendants(callback: TabCallback): void {
-    this.children.tabs.forEach((tab: Tab) => {
+    this.children.applyAll((tab: Tab) => {
       callback(tab)
       return tab.applyDescendants(callback)
     })

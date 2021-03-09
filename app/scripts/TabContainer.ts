@@ -3,63 +3,23 @@ import Container from './Container'
 
 export class TabContainer extends Container {
 
-  // Tabs mapped by id
-  tabs: Map<number, Tab>
-
   constructor() {
     super()
   }
 
-  initialize() {
-    // chrome.tabs.getAll(this
-  }
-
-  initFromChromeQuery(chromeQueryResponse: any[]) {
-
+  async initialize() {
+    const queryInfo = {}
+    chrome.tabs.query(queryInfo, this.initFromChromeQueryResponse.bind(this))
   }
 
   // Create tabs and their relationships
-  initFromArray(tabs:chrome.tabs.Tab[]) {
-    const parentQueue = new Map<number, Array<Tab>>()
-
-    tabs.forEach((tab:chrome.tabs.Tab) => {
-      const tabObj = new Tab(tab)
-
-      // Parent already in container -> set parent normally
-      if (tab.openerTabId) {
-        const parent = this.tryGet(tab.openerTabId)
-
-        if (parent) {
-          tabObj.parentTo(parent)
-        }
-
-        // Parent not yet in container. Wait for it to be created
-        else {
-          if (!parentQueue.has(tab.openerTabId)) {
-            parentQueue.set(tab.openerTabId, [])
-          }
-          // should be just parentQueue.get(tab.openerTabId).push(tabObj)
-          const siblingparentQueue = parentQueue.get(tab.openerTabId)
-
-          if (siblingparentQueue) {
-            siblingparentQueue.push(tabObj)
-          }
-        }
+  initFromChromeQueryResponse(tabs:chrome.tabs.Tab[]) {
+    tabs.forEach((chromeTab:chrome.tabs.Tab) => {
+      // Tab could have been initialized with it's descendant
+      if (!this.get(chromeTab.id!)) {
+        const tab = Tab.InitFromChromeTab(chromeTab)
+        this.add(tab)
       }
-      // Top level tab -> parent to window's root tab
-      else {
-        const window = tabObj.getWindow()
-        tabObj.parentTo(window.root)
-      }
-
-      const queueForThis = parentQueue.get(tabObj.id)
-      if (queueForThis) {
-        // Children were created first -> parent them
-        queueForThis.forEach((tab:Tab) => {
-          tab.parentTo(tabObj)
-        })
-      }
-      this.add(tabObj)
     })
   }
 

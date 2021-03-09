@@ -42,7 +42,7 @@ class ChromeCallbacks {
       // This lags sometimes.
       // TODO: keep track of tab order to avoid api call?
       // TODO: rewrite
-      root.children.tabs.forEach((item) => {
+      root.children.applyAll((item) => {
         // get current index
         chrome.tabs.get(item.id, (tab:chrome.tabs.Tab) => {
           let prev = --tab.index
@@ -58,7 +58,7 @@ class ChromeCallbacks {
 
           processed++
 
-          if (processed === root.children.tabs.size) {
+          if (processed === root.children.count) {
             minIndex = (minIndex) ? minIndex : 999
             chrome.tabs.move([item.id], {index: minIndex})
           }
@@ -115,7 +115,7 @@ class ChromeCallbacks {
   }
 
   static onWindowCreated(chromeWindow:chrome.windows.Window) {
-    const window = Window.init(chromeWindow)
+    const window = Window.initFromChromeWindow(chromeWindow)
     // Connect only when needed to avoid race conditions
     // (window is not ready to process immediately)
     // window.connect()
@@ -132,8 +132,12 @@ class ChromeCallbacks {
 
 
 // Initialize tab and window containers
-chrome.windows.getAll(windowContainer.initFromArray.bind(windowContainer))
-chrome.tabs.query({}, tabContainer.initFromArray.bind(tabContainer))
+windowContainer.initialize()
+  .then(tabContainer.initialize.bind(tabContainer))
+  // .then(tabContainer.initialize.bind(tabContainer))
+
+// chrome.windows.getAll(windowContainer.initFromArray.bind(windowContainer))
+// chrome.tabs.query({}, tabContainer.initFromArray.bind(tabContainer))
 
 chrome.tabs.onCreated.addListener(ChromeCallbacks.onTabCreated)
 chrome.tabs.onMoved.addListener(ChromeCallbacks.onTabMoved)
