@@ -1,4 +1,4 @@
-// import 'chromereload/devonly' // Remove this before building
+import 'chromereload/devonly' // Remove this before building
 import Tab from './Tab'
 import {tabContainer} from './TabContainer'
 import {windowContainer} from './WindowContainer'
@@ -19,16 +19,23 @@ class ChromeCallbacks {
     }
     // top level tab -> parent to window's root node
     else {
-      const root = tab.getWindow().root
-      tab.parentTo(root)
+      const window = tab.getWindow()
+      if (window) {
+        tab.parentTo(window.root)
+      }
     }
   }
 
   static onTabMoved(tabId:number, info:chrome.tabs.TabMoveInfo) {
-    const tab = tabContainer.tryGet(tabId)
-    if (!tab) return
+    const tabTry = tabContainer.tryGet(tabId)
+    if (!tabTry) return
 
-    const root:Tab = tab.getWindow().root
+    const tab:Tab = tabTry
+    const window = tab.getWindow()
+    if (!window) return
+
+    const root:Tab = window.root
+    if (!root) return
 
     // whether this was final move event made by Vivaldi
     const correctEvent = tab.initialIndex === info.fromIndex
@@ -42,10 +49,10 @@ class ChromeCallbacks {
       // This lags sometimes.
       // TODO: keep track of tab order to avoid api call?
       // TODO: rewrite
-      root.children.tabs.forEach((item) => {
+      root.applyChildren((item) => {
         // get current index
-        chrome.tabs.get(item.id, (tab:chrome.tabs.Tab) => {
-          let prev = --tab.index
+        chrome.tabs.get(item.id, (chromeTab:chrome.tabs.Tab) => {
+          let prev = --chromeTab.index
 
           if (prev > searchBelow) {
             if (!minIndex || prev <= minIndex) {
@@ -58,7 +65,7 @@ class ChromeCallbacks {
 
           processed++
 
-          if (processed === root.children.tabs.size) {
+          if (processed === root.children.size()) {
             minIndex = (minIndex) ? minIndex : 999
             chrome.tabs.move([item.id], {index: minIndex})
           }
@@ -121,20 +128,19 @@ class ChromeCallbacks {
   }
 
   static onWindowRemoved(windowId:number) {
-    try {
-      const window = windowContainer.get(windowId)
+    const window:Window = windowContainer.get(windowId)
     windowContainer.remove(window)
-    } catch (error) {
-      console.error(`${windowId} was not in container`)
-    }
+    console.error(`${windowId} was not in container`)
   }
 }
 
 
 // Initialize tab and window containers
-chrome.windows.getAll(windowContainer.initFromArray.bind(windowContainer))
-chrome.tabs.query({}, tabContainer.initFromArray.bind(tabContainer))
+chrome.windows.getAll(windowContainer.initFromChromeQuery.bind(windowContainer))
+chrome.tabs.query({}, tabContainer.initFromChromeQuery.bind(tabContainer))
 
+// tabContainer.initialize.bind(tabContainer)
+// windowContainer.initialize.bind(windowContainer)
 chrome.tabs.onCreated.addListener(ChromeCallbacks.onTabCreated)
 chrome.tabs.onMoved.addListener(ChromeCallbacks.onTabMoved)
 chrome.tabs.onRemoved.addListener(ChromeCallbacks.onTabRemoved)

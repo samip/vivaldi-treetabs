@@ -1,94 +1,65 @@
 import Tab from './Tab'
 import {TabCallback} from './Types/TabCallback'
+import Container from './Container'
 
-export class TabContainer {
-
-  // Tabs mapped by id
-  tabs: Map<number, Tab>
+export class TabContainer extends Container {
 
   constructor() {
-    this.tabs = new Map<number, Tab>()
+    super()
   }
 
-  add(tab:Tab): void {
-    this.tabs.set(tab.id, tab)
-  }
-
-  get(id:number): Tab {
-    const tab = this.tabs.get(id)
-    if (!tab) {
-      throw new Error(`Invalid access for tab id ${id}`)
-    }
-    return tab
-  }
-
-  tryGet(id:number): Tab | undefined {
-    return this.tabs.get(id)
-  }
-
-  applyAll(callback: TabCallback): void {
-    this.tabs.forEach((tab:Tab) => callback(tab))
-  }
-
-  getFirst(): Tab {
-    return this.tabs.values().next().value
-  }
-
-  remove(tab:Tab) {
-    if (this.tabs.get(tab.id)) {
-      this.tabs.delete(tab.id)
-    }
-  }
-
-  isEmpty(): boolean {
-    return this.tabs.size === 0
+  initialize() {
+    chrome.tabs.query({}, this.initFromChromeQuery.bind(this))
   }
 
   // Create tabs and their relationships
-  initFromArray(tabs:chrome.tabs.Tab[]) {
+  initFromChromeQuery(chromeQueryResponse: chrome.tabs.Tab[]) {
     const parentQueue = new Map<number, Array<Tab>>()
 
-    tabs.forEach((tab:chrome.tabs.Tab) => {
-      const tabObj = new Tab(tab)
+    chromeQueryResponse.forEach((chromeTab:chrome.tabs.Tab) => {
+      const tab = new Tab(chromeTab)
 
       // Parent already in container -> set parent normally
-      if (tab.openerTabId) {
-        const parent = this.tryGet(tab.openerTabId)
+      if (chromeTab.openerTabId) {
+
+        const parent = this.tryGet(chromeTab.openerTabId)
 
         if (parent) {
-          tabObj.parentTo(parent)
+          console.log(parent)
+          tab.parentTo(parent)
         }
 
         // Parent not yet in container. Wait for it to be created
         else {
-          if (!parentQueue.has(tab.openerTabId)) {
-            parentQueue.set(tab.openerTabId, [])
+          if (!parentQueue.has(chromeTab.openerTabId)) {
+            parentQueue.set(chromeTab.openerTabId, [])
           }
           // should be just parentQueue.get(tab.openerTabId).push(tabObj)
-          const siblingparentQueue = parentQueue.get(tab.openerTabId)
+          const siblingparentQueue = parentQueue.get(chromeTab.openerTabId)
 
           if (siblingparentQueue) {
-            siblingparentQueue.push(tabObj)
+            siblingparentQueue.push(tab)
           }
         }
       }
       // Top level tab -> parent to window's root tab
       else {
-        const window = tabObj.getWindow()
-        tabObj.parentTo(window.root)
+        const window = tab.getWindow()
+        if (window) {
+          tab.parentTo(window.root)
+        }
       }
 
-      const queueForThis = parentQueue.get(tabObj.id)
+      const queueForThis = parentQueue.get(tab.id)
       if (queueForThis) {
         // Children were created first -> parent them
         queueForThis.forEach((tab:Tab) => {
-          tab.parentTo(tabObj)
+          tab.parentTo(tab)
         })
       }
-      this.add(tabObj)
+      this.add(tab)
     })
   }
-
 }
 
 // Contains references to all tabs from each window

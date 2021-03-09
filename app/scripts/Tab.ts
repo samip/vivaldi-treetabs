@@ -41,17 +41,21 @@ export default class Tab {
 
   // Call function on every descendant (children, children of children
   applyDescendants(callback: TabCallback): void {
-    this.children.tabs.forEach((tab: Tab) => {
+    this.children.applyAll((tab: Tab) => {
       callback(tab)
       return tab.applyDescendants(callback)
     })
   }
 
-  // Send tab specific command to userscript
+  // Send tab-specific command to userscript
   command(command: string, parameters: any = {}): void {
     parameters['tabId'] = this.id
     const cmd = new Command(command, parameters)
-    cmd.send(this.getWindow())
+    const window = this.getWindow()
+
+    if (window) {
+      cmd.send(window)
+    }
   }
 
   // Traverse to root, return distance / depth / indentlevel  **/
@@ -73,6 +77,7 @@ export default class Tab {
         return distance
       }
     }
+
     return helper(this, 0)
   }
 
@@ -80,13 +85,16 @@ export default class Tab {
     return this.calculateDistanceToRoot()
   }
 
-  getWindow(): Window {
+  getWindow(): Window | undefined {
     const windowId = this.chromeTab.windowId
     return windowContainer.get(windowId)
   }
 
   parentTo(parent: Tab): Tab {
-    parent.children.add(this)
+    if (parent && parent.children) {
+      parent.children.add(this)
+    }
+
     this.parent = parent
     // Has children now -> show close children button
     // if (!parent.isRoot && !parent.closeChildrenButtonVisible) {

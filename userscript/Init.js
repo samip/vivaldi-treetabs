@@ -63,16 +63,12 @@ function portIsForWindow(port, win) {
 }
 
 chrome.runtime.onConnectExternal.addListener(port => {
-  if (!portIsForWindow(port, window)) {
-    return
-  }
-
-  console.info('INFO', `Messaging port '${port.name}' found it's window`)
-
-  try {
-    initTreeTabUserScript(port)
-  } catch (error) {
-    extLog(error)
-    throw error
+  if (portIsForWindow(port, window)) {
+    try {
+      initTreeTabUserScript(port)
+    } catch (error) {
+      extLog(error)
+      throw error
+    }
   }
 })
