@@ -11,7 +11,7 @@ class WindowContainer extends Container {
   }
 
   initialize() {
-    chrome.windows.getAll(this.initFromChromeQuery.bind(this))
+    // chrome.windows.getAll(this.initFromChromeQuery.bind(this))
   }
 
   initFromChromeQuery(chromeQueryResponse: any[]) {

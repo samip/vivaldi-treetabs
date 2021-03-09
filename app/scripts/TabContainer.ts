@@ -1,47 +1,21 @@
 import Tab from './Tab'
-import {TabCallback} from './Types/TabCallback'
+import Container from './Container'
 
-export class TabContainer {
+export class TabContainer extends Container {
 
   // Tabs mapped by id
   tabs: Map<number, Tab>
 
   constructor() {
-    this.tabs = new Map<number, Tab>()
+    super()
   }
 
-  add(tab:Tab): void {
-    this.tabs.set(tab.id, tab)
+  initialize() {
+    // chrome.tabs.getAll(this
   }
 
-  get(id:number): Tab {
-    const tab = this.tabs.get(id)
-    if (!tab) {
-      throw new Error(`Invalid access for tab id ${id}`)
-    }
-    return tab
-  }
+  initFromChromeQuery(chromeQueryResponse: any[]) {
 
-  tryGet(id:number): Tab | undefined {
-    return this.tabs.get(id)
-  }
-
-  applyAll(callback: TabCallback): void {
-    this.tabs.forEach((tab:Tab) => callback(tab))
-  }
-
-  getFirst(): Tab {
-    return this.tabs.values().next().value
-  }
-
-  remove(tab:Tab) {
-    if (this.tabs.get(tab.id)) {
-      this.tabs.delete(tab.id)
-    }
-  }
-
-  isEmpty(): boolean {
-    return this.tabs.size === 0
   }
 
   // Create tabs and their relationships
