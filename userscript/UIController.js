@@ -9,10 +9,14 @@ class UIController {
   tab (tabId) {
     if (!this.tabs[tabId]) {
       this.tabs[tabId] = new TabController(tabId)
-      // this.tabs[tabId].setElement(this.getElement(tabId))
       this.tabs[tabId].setMessagingFunction(this.messagingFunction)
+      extLog('INFO', `New tab item (first command for) tab${tabId}`)
+    } else {
+      extLog('INFO', `Existing tab item ${tabId}`)
     }
-    this.tabs[tabId].setElement(this.tabs[tabId].findElement())
+    if (!this.tabs[tabId].element) {
+      this.tabs[tabId].setElement(this.tabs[tabId].findElement())
+    }
     return this.tabs[tabId]
   }
 
@@ -30,7 +34,7 @@ class UIController {
       // execute command and delete it from queue
       let cmd = this.queue.shift()
       this[cmd.command](cmd.args)
-      extLog('INFOOO', `Queued command run ${cmd.command}`, cmd)
+      extLog('INFO', `Queued command run ${cmd.command}`, cmd)
     }
   }
 
@@ -43,7 +47,7 @@ class UIController {
       args: argsArray
     })
 
-    extLog('INFO', 'Command added to queue:' + command + ' args: args.join(', ')')
+    extLog('INFO', `Command added to queue:' ${command} args: ${args.join(', ')}`)
     return this
   }
 
@@ -52,7 +56,7 @@ class UIController {
     // Busted
     const existing = document.getElementById(buttonId)
     if (existing) {
-      extLog('VERBOSE', 'Skipping show refresh view button.. button already rendered')
+      extLog('VERBOSE', 'Refresh button already rendered')
       return this
     }
 

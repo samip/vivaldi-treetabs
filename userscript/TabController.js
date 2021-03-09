@@ -67,7 +67,6 @@ class TabController extends UIController {
       extLog('DEBUG', `CloseChildrenButton created for tab#${this.logDisplay(this)}`)
     }
 
-    extLog('DEBUG', `Showing CloseChildrenButton for tab#${this.logDisplay(this)}`)
     return this
   }
 
@@ -81,9 +80,9 @@ class TabController extends UIController {
     const button = this.element.querySelector('.' + buttonClass)
     if (button) {
       button.style.visibility = 'hidden'
-      extLog('DEBUG', `closeCildrenButton hidden for tab#${this.logDisplay(this)}`)
+      extLog('DEBUG', `closeChildrenButton hidden for tab#${this.logDisplay(this)}`)
     } else {
-      extLog('INFO', `hideCloseChildrenButton called w/o element for tab${this.logDisplay(this)}`)
+      extLog('INFO', `hideCloseChildrenButton missing element for tab${this.logDisplay(this)}`)
     }
 
     return this
@@ -109,7 +108,7 @@ class TabController extends UIController {
   }
 
   findElement () {
-    const tabDomId = 'tab-' + this.tabId
+    const tabDomId = `tab-${this.tabId}`
     return document.getElementById(tabDomId)
   }
 
