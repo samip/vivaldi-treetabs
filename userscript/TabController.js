@@ -12,6 +12,11 @@ class TabController extends UIController {
   // --------------
 
 
+  setElement (element) {
+    this.element = element
+    return this
+  }
+
   indentTab (indentLevel) {
     if (!this.element) {
       return this.queueCommand('indentTab', arguments)
@@ -103,10 +108,14 @@ class TabController extends UIController {
     return element
   }
 
-  static findElementByTabId (tabId) {
-    // Is there another way?
-    const tabDomId = 'dom-' + tabId
+  findElement () {
+    const tabDomId = 'tab-' + this.tabId
     return document.getElementById(tabDomId)
+  }
+
+  setElement (element) {
+    this.element = element
+    return this
   }
 
   logDisplay(tab) {

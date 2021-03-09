@@ -7,7 +7,6 @@ function initTreeTabUserScript(messagingPort) {
   const uiObserver = new UIObserver()
 
   uiObserver.tabContainer.addCallback('onCreated', (_element) => {
-    console.error('observerOnCreated')
     // Tab container is removed when browser enters full screen mode
     // and is rendered again when exiting full screen mode.
     // Ask extension to re-render tab indentantions after

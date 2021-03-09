@@ -12,18 +12,10 @@ class UIController {
       // this.tabs[tabId].setElement(this.getElement(tabId))
       this.tabs[tabId].setMessagingFunction(this.messagingFunction)
     }
-    this.tabs[tabId].setElement(this.getElement(tabId))
+    this.tabs[tabId].setElement(this.tabs[tabId].findElement())
     return this.tabs[tabId]
   }
 
-  getElement (tabId) {
-    return document.getElementById('tab-' + tabId)
-  }
-
-  setElement (element) {
-    this.element = element
-    return this
-  }
 
   setMessagingFunction (fn) {
     this.messagingFunction = fn
@@ -38,6 +30,7 @@ class UIController {
       // execute command and delete it from queue
       let cmd = this.queue.shift()
       this[cmd.command](cmd.args)
+      extLog('INFOOO', `Queued command run ${cmd.command}`, cmd)
     }
   }
 
