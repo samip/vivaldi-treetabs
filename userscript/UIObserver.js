@@ -49,7 +49,6 @@ class UIObserver {
     this.tabContainerObserver = new MutationObserver(
       this.findTabContainerFromMutations.bind(this)
     )
-
     this.tabContainerObserver.observe(tabContainerParent, this.observerSettings())
   }
 

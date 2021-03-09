@@ -134,10 +134,6 @@ class ChromeCallbacks {
 // Initialize tab and window containers
 windowContainer.initialize()
   .then(tabContainer.initialize.bind(tabContainer))
-  // .then(tabContainer.initialize.bind(tabContainer))
-
-// chrome.windows.getAll(windowContainer.initFromArray.bind(windowContainer))
-// chrome.tabs.query({}, tabContainer.initFromArray.bind(tabContainer))
 
 chrome.tabs.onCreated.addListener(ChromeCallbacks.onTabCreated)
 chrome.tabs.onMoved.addListener(ChromeCallbacks.onTabMoved)

@@ -14,8 +14,8 @@ class Messaging {
     return port
   }
 
-  setUiController (uiController) {
-    this.uiController = uiController
+  onDisconnected (port) {
+    console.log('Port disconnected', port)
   }
 
   onReceived (request, _port) {
@@ -51,6 +51,10 @@ class Messaging {
     }
   }
 
+  setUiController (uiController) {
+    this.uiController = uiController
+  }
+
   send (command) {
     if (this.port) {
       this.port.postMessage(command)
@@ -66,9 +70,5 @@ class Messaging {
   log () {
     console.log.apply(console, arguments)
     this.send({log: arguments})
-  }
-
-  onDisconnected (port) {
-    console.log('Port disconnected', port)
   }
 }

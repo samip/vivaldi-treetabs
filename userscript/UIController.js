@@ -7,13 +7,17 @@ class UIController {
   }
 
   tab (tabId) {
-    if (this.tabs[tabId]) {
-      this.tabs[tabId].setElement(this.getElement(tabId))
-    } else {
-      this.tabs[tabId] = new TabController(tabId, this.getElement(tabId))
+    if (!this.tabs[tabId]) {
+      this.tabs[tabId] = new TabController(tabId)
+      // this.tabs[tabId].setElement(this.getElement(tabId))
       this.tabs[tabId].setMessagingFunction(this.messagingFunction)
     }
+    this.tabs[tabId].setElement(this.getElement(tabId))
     return this.tabs[tabId]
+  }
+
+  getElement (tabId) {
+    return document.getElementById('tab-' + tabId)
   }
 
   setElement (element) {
@@ -39,19 +43,14 @@ class UIController {
 
   queueCommand (command, args) {
     args = args || []
-
     const argsArray = Array.from(args)
-    for (let i = 0; i < args.length; i++) {
-      true || false
-      // argsArray.push(args[i])
-    }
 
     this.queue.push({
       command: command,
       args: argsArray
     })
 
-    extLog('INFO', 'Command added to queue:' + command)
+    extLog('INFO', 'Command added to queue:' + command + ' args: args.join(', ')')
     return this
   }
 
@@ -82,9 +81,5 @@ class UIController {
     })
 
     return button
-  }
-
-  getElement (tabId) {
-    return document.getElementById('tab-' + tabId)
   }
 }
