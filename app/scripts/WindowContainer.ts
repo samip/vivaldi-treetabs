@@ -1,24 +1,21 @@
 import Window from './Window'
+import Container from './Container'
 
-class WindowContainer {
+class WindowContainer extends Container {
 
   windows: Map<number,Window> // Windows indexed by ids
 
   constructor() {
+    super()
     this.windows = new Map<number, Window>()
   }
 
-  add(window:Window) {
-    const key = window.id
-    this.windows.set(key, window)
+  initialize() {
+    chrome.windows.getAll(this.initFromChromeQuery.bind(this))
   }
 
-  get(id:number): Window | undefined {
-    return this.windows.get(id)
-  }
+  initFromChromeQuery(chromeQueryResponse: any[]) {
 
-  remove(window:Window) {
-    this.windows.delete(window.id)
   }
 
   initFromArray(windows:chrome.windows.Window[]) {
@@ -26,9 +23,12 @@ class WindowContainer {
       // connect() doesn't work here due to a race-condition with messaging.
       // Try connecting when the message-bridge is actually needed; Command#send()
       // TODO: connect from userscript instead
-      const window = Window.init(chromeWindow)
-      this.add(window)
+      const _window = Window.init(chromeWindow)
+      console.error(_window)
+      this.add(_window)
     })
+
+    console.log(windowContainer)
   }
 
 }

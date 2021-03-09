@@ -75,6 +75,9 @@ export class TabContainer {
       // Top level tab -> parent to window's root tab
       else {
         const window = tabObj.getWindow()
+        console.error(tabObj)
+        console.error(window.root)
+        console.error(window)
         tabObj.parentTo(window.root)
       }
 

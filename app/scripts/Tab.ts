@@ -82,7 +82,12 @@ export default class Tab {
 
   getWindow(): Window {
     const windowId = this.chromeTab.windowId
-    return windowContainer.get(windowId)
+    const _window = windowContainer.get(windowId)
+    if (!_window) {
+      throw Error('No window for tab')
+    }
+    console.error(windowContainer)
+    return _window!
   }
 
   parentTo(parent: Tab): Tab {

@@ -81,8 +81,10 @@ class ChromeCallbacks {
     if (!tab) return
 
     const newWindow = windowContainer.get(info.newWindowId)
-    tab.parentTo(newWindow.root)
-    tab.renderIndentation()
+    if (newWindow) {
+      tab.parentTo(newWindow.root)
+      tab.renderIndentation()
+    }
   }
 
   // move children to new window with their parent?
@@ -121,11 +123,9 @@ class ChromeCallbacks {
   }
 
   static onWindowRemoved(windowId:number) {
-    try {
-      const window = windowContainer.get(windowId)
-    windowContainer.remove(window)
-    } catch (error) {
-      console.error(`${windowId} was not in container`)
+    const window = windowContainer.get(windowId)
+    if (window) {
+      windowContainer.remove(window)
     }
   }
 }
