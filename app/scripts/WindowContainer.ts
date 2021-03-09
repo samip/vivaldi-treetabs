@@ -23,12 +23,9 @@ class WindowContainer extends Container {
       // connect() doesn't work here due to a race-condition with messaging.
       // Try connecting when the message-bridge is actually needed; Command#send()
       // TODO: connect from userscript instead
-      const _window = Window.init(chromeWindow)
-      console.error(_window)
-      this.add(_window)
+      const window = Window.init(chromeWindow)
+      this.add(window)
     })
-
-    console.log(windowContainer)
   }
 
 }

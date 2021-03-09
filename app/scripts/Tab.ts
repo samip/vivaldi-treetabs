@@ -86,7 +86,6 @@ export default class Tab {
     if (!_window) {
       throw Error('No window for tab')
     }
-    console.error(windowContainer)
     return _window!
   }
 
