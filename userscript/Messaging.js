@@ -24,25 +24,25 @@ class Messaging {
       // @param tabId
       // @param indentLevel - how many steps tab needs to be indentedx
       case 'IndentTab':
-        this.uiController.tab(request.tabId).indentTab(request.indentLevel)
+        UIController.tab(request.tabId).indentTab(request.indentLevel)
         break
 
       // Show or create 'Close child tabs' button in tab strip
       // @param tabId
       case 'ShowCloseChildrenButton':
-        this.uiController.tab(request.tabId).showCloseChildrenButton()
+        UIController.tab(request.tabId).showCloseChildrenButton()
         break
 
       // Hide 'Close child tabs' button in tab strip
       // @param tabId
       case 'HideCloseChildrenButton':
-        this.uiController.tab(request.tabId).hideCloseChildrenButton()
+        UIController.tab(request.tabId).hideCloseChildrenButton()
         break
 
       // Delete tab-specific data after tab has been closed
       // @param tabId
       case 'FlushData':
-        delete this.uiController.tabs[request.tabId]
+        UIController.deleteTabReference(request.tabId)
         break
 
       default:
@@ -52,7 +52,7 @@ class Messaging {
   }
 
   setUiController (uiController) {
-    this.uiController = uiController
+    this.uiController = uiController.tab
   }
 
   send (command) {

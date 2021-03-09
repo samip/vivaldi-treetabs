@@ -16,16 +16,16 @@ function initTreeTabUserScript(messagingPort) {
   })
 
   uiObserver.tab.addCallback('onCreated', (element, tabId) => {
-    const tab = uiController.tab(tabId)
+    const tab = UIController.tab(tabId)
     // Make sure button is shown after tab button is re-rendered
     if (tab.hasChildren) {
       const cmdName = 'showCloseChildrenButton'
       tab.commandIsQueued(cmdName) || tab.queueCommand(cmdName)
     }
-    uiController.tab(tabId).setElement(element)
+    tab.setElement(element)
     // Commands were given to tab from extension before tab element
     // was rendered in UI, run them now.
-    uiController.tab(tabId).runQueuedCommands(element)
+    tab.runQueuedCommands(element)
   })
 
   uiObserver.init()

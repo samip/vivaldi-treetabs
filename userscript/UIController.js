@@ -1,25 +1,30 @@
 class UIController {
 
   constructor () {
-    this.tabs = {}
+    window.tabs = window.tabs || {}
     this.queue = []
     this.messagingFunction = null
   }
 
-  tab (tabId) {
-    if (!this.tabs[tabId]) {
-      this.tabs[tabId] = new TabController(tabId)
-      this.tabs[tabId].setMessagingFunction(this.messagingFunction)
+  static tab (tabId) {
+    if (!window.tabs[tabId]) {
+      window.tabs[tabId] = new TabController(tabId)
+      window.tabs[tabId].setMessagingFunction(this.messagingFunction)
       extLog('INFO', `New tab item (first command for) tab${tabId}`)
     } else {
       extLog('INFO', `Existing tab item ${tabId}`)
     }
-    if (!this.tabs[tabId].element) {
-      this.tabs[tabId].setElement(this.tabs[tabId].findElement())
+    if (!window.tabs[tabId].element) {
+      window.tabs[tabId].setElement(window.tabs[tabId].findElement())
     }
-    return this.tabs[tabId]
+    return window.tabs[tabId]
   }
 
+  static deleteTabReference(tabId) {
+    if (tabId) {
+      delete window.tabs[tabId]
+    }
+  }
 
   setMessagingFunction (fn) {
     this.messagingFunction = fn
@@ -47,7 +52,7 @@ class UIController {
       args: argsArray
     })
 
-    extLog('INFO', `Command added to queue:' ${command} args: ${args.join(', ')}`)
+    extLog('INFO', `Command added to queue:' ${command} args: ${argsArray.join(', ')}`)
     return this
   }
 
