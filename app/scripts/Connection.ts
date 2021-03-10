@@ -38,7 +38,7 @@ export default class Connection {
       const logLevels = ['INFO', 'DEBUG', 'VERBOSE']
       const [first, ...rest] = message.log[0]
       if (logLevels.includes(first)) {
-        console.log('Userscript:', rest)
+        console.log('Userscript:',...rest)
       } else {
         console.log('Userscript:', message.log)
       }

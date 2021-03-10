@@ -96,6 +96,7 @@ class UIObserver {
 
     const id = getTabId(tabElement)
     if (id) {
+      console.log(this.tab.eventhandlers)
       this.tab.eventHandlers.onCreated.forEach(eventHandler =>
         eventHandler(tabElement, id)
       )

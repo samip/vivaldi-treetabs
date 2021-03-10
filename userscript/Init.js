@@ -72,7 +72,7 @@ chrome.runtime.onConnectExternal.addListener(port => {
   try {
     initTreeTabUserScript(port)
   } catch (error) {
-    extLog(error)
+    extLog(error.message)
     throw error
   }
 })

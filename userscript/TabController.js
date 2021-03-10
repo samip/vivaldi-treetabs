@@ -22,9 +22,12 @@ class TabController extends UIController {
       return this.queueCommand('indentTab', arguments)
     }
 
+    if (!this.element.parentElement) {
+      extLog('INFO', 'indentTab attempt on element without parentElement on tab#' + this.tabId)
+      return this
+    }
     const indentValue = this.indentationCSSValue(indentLevel)
     const indentAttribute = this.indentationOption('attribute')
-
     this.element.parentElement.style[indentAttribute] = indentValue
     return this
   }
@@ -96,14 +99,12 @@ class TabController extends UIController {
     element.classList.add('close')
     element.classList.add(buttonClass)
     element.innerHTML = TabController.closeChildrenButtonSVG()
-
     element.addEventListener('click', (_event) => {
-      this.messagingFunction({
+      window.treeTabs.messaging.send({
         command: 'CloseChildren',
         tabId: this.tabId
       })
     })
-
     return element
   }
 

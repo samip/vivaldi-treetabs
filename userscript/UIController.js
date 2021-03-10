@@ -3,7 +3,9 @@ class UIController {
   constructor () {
     window.tabs = window.tabs || {}
     this.queue = []
-    this.messagingFunction = null
+    // TODO: inject
+    // this.messagingFunction = window.treeTabs.messaging.send
+    this.uid = Math.floor(Math.random() * 1000) + 1;
   }
 
   static tab (tabId) {
@@ -27,7 +29,7 @@ class UIController {
   }
 
   setMessagingFunction (fn) {
-    this.messagingFunction = fn
+    // tmp. disabled
   }
 
   commandIsQueued (command) {
@@ -79,7 +81,7 @@ class UIController {
     button.classList = 'button-toolbar refresh-tab-tree'
 
     button.addEventListener('click', (_event) => {
-      this.messagingFunction({ command: 'RenderAllTabs' })
+      window.treeTabs.messaging.send({ command: 'RenderAllTabs' })
     })
 
     return button
