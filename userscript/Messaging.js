@@ -30,6 +30,9 @@ class Messaging {
       // Show or create 'Close child tabs' button in tab strip
       // @param tabId
       case 'ShowCloseChildrenButton':
+        // tmp fix to missing button problem 
+
+        // treetabs.messaging.send({command: 'RenderAllTabs'})
         UIController.tab(request.tabId).showCloseChildrenButton()
         break
 

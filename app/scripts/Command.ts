@@ -8,9 +8,9 @@ export default class Command {
   parameters: CommandParameters
   logEnabled: boolean
 
-  constructor(command:string, parameters:CommandParameters) {
+  constructor(command:string, parameters?:CommandParameters) {
     this.command = command
-    this.parameters = parameters
+    this.parameters = parameters || {}
     this.logEnabled = false
   }
 

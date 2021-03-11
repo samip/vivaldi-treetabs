@@ -3,7 +3,6 @@ class TabController extends UIController {
   constructor (tabId) {
     super()
     this.tabId = tabId
-    this.element = null
     this.hasChildren = false
   }
 
@@ -12,23 +11,19 @@ class TabController extends UIController {
   // --------------
 
 
-  setElement (element) {
-    this.element = element
-    return this
-  }
-
   indentTab (indentLevel) {
-    if (!this.element) {
+    const element = this.findElement()
+    if (!element) {
       return this.queueCommand('indentTab', arguments)
     }
 
-    if (!this.element.parentElement) {
+    if (!element.parentElement) {
       extLog('INFO', 'indentTab attempt on element without parentElement on tab#' + this.tabId)
       return this
     }
     const indentValue = this.indentationCSSValue(indentLevel)
     const indentAttribute = this.indentationOption('attribute')
-    this.element.parentElement.style[indentAttribute] = indentValue
+    element.parentElement.style[indentAttribute] = indentValue
     return this
   }
 
@@ -41,33 +36,34 @@ class TabController extends UIController {
     return options[key]
   }
 
-  closeAllChildrenButtonClass () {
-    return 'close-children'
-  }
-
   indentationCSSValue (indentLevel) {
     return indentLevel * this.indentationOption('step') +
       this.indentationOption('unit')
   }
 
+
   showCloseChildrenButton () {
     this.hasChildren = true
-    if (!this.element) {
+    const element = this.findElement()
+    if (!element) {
       return this.queueCommand('showCloseChildrenButton', arguments)
     }
 
-    const closeButton = this.element.querySelector('.close')
+    // Append next to regular  
+    const closeButton = element.querySelector('.close')
     const buttonClass = this.closeAllChildrenButtonClass()
-    const existingButton = this.element.querySelector('.' + buttonClass)
+    const existingButton = element.querySelector('.' + buttonClass)
 
     if (existingButton) {
       existingButton.style.visibility = 'initial'
       extLog('DEBUG', `CloseChildrenButton set visible for tab#${this.logDisplay(this)}`)
+      console.log('closeButton updated', existingButton, element)
       // extLog('DEBUG', Showing close children button for tab#${this.logDisplay()}`)
     } else {
       const closeChildrenButton = this.createCloseChildrenButton()
       closeButton.parentNode.insertBefore(closeChildrenButton, closeButton)
       extLog('DEBUG', `CloseChildrenButton created for tab#${this.logDisplay(this)}`)
+      console.log('closeButton created', closeButton, element)
     }
 
     return this
@@ -75,15 +71,17 @@ class TabController extends UIController {
 
   hideCloseChildrenButton () {
     this.hasChildren = false
-    if (!this.element) {
+    const element = this.findElement()
+    if (!element) {
       return this.queueCommand('hideCloseChildrenButton', arguments)
     }
 
     const buttonClass = this.closeAllChildrenButtonClass()
-    const button = this.element.querySelector('.' + buttonClass)
+    const button = element.querySelector('.' + buttonClass)
     if (button) {
       button.style.visibility = 'hidden'
       extLog('DEBUG', `closeChildrenButton hidden for tab#${this.logDisplay(this)}`)
+      console.log('existingCloseAllButton', element)
     } else {
       extLog('INFO', `hideCloseChildrenButton missing element for tab${this.logDisplay(this)}`)
     }
@@ -108,18 +106,23 @@ class TabController extends UIController {
     return element
   }
 
+  closeAllChildrenButtonClass () {
+    return 'close-children'
+  }
+
   findElement () {
     const tabDomId = `tab-${this.tabId}`
     return document.getElementById(tabDomId)
   }
 
   setElement (element) {
-    this.element = element
-    return this
+    // element = element
+    // return this
   }
 
   logDisplay(tab) {
-    return `${tab.tabId} ${tab.element.title}`
+    // return `${tab.tabId} ${tab.findElement().title}`
+    return `${tab.tabId} ${tab.findElement().title}`
   }
 
   // icon for close children button. Vivaldi's close tab icon + three circles

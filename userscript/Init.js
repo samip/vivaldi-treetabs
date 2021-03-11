@@ -17,12 +17,17 @@ function initTreeTabUserScript(messagingPort) {
 
   uiObserver.tab.addCallback('onCreated', (element, tabId) => {
     const tab = UIController.tab(tabId)
+    // tabIdState(tabId)
+    // - displayCloseChildrenButton
+
+
     // Make sure button is shown after tab button is re-rendered
     if (tab.hasChildren) {
       const cmdName = 'showCloseChildrenButton'
       tab.commandIsQueued(cmdName) || tab.queueCommand(cmdName)
     }
-    tab.setElement(element)
+    console.log('tab created tab#'+tabId, element, tab)
+    // tab.setElement(element)
     // Commands were given to tab from extension before tab element
     // was rendered in UI, run them now.
     tab.runQueuedCommands(element)
@@ -30,7 +35,7 @@ function initTreeTabUserScript(messagingPort) {
 
   uiObserver.init()
   uiController.setMessagingFunction(messaging.send.bind(messaging))
-  messaging.setUiController(uiController)
+  // messaging.setUiController(uiController)
 
   window.treeTabs = {
     messaging: messaging,
@@ -68,11 +73,5 @@ chrome.runtime.onConnectExternal.addListener(port => {
   }
 
   console.info('INFO', `Messaging port '${port.name}' found it's window`)
-
-  try {
-    initTreeTabUserScript(port)
-  } catch (error) {
-    extLog(error.message)
-    throw error
-  }
+  initTreeTabUserScript(port)
 })

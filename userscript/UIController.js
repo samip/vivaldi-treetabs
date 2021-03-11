@@ -14,7 +14,7 @@ class UIController {
       window.tabs[tabId].setMessagingFunction(this.messagingFunction)
       extLog('INFO', `New tab item (first command for) tab${tabId}`)
     } else {
-      extLog('INFO', `Existing tab item ${tabId}`)
+      // extLog('INFO', `Existing tab item ${tabId}`)
     }
     if (!window.tabs[tabId].element) {
       window.tabs[tabId].setElement(window.tabs[tabId].findElement())

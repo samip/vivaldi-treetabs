@@ -61,9 +61,9 @@ class UIObserver {
 
   observerSettings () {
     return {
-      attributes: false,
+      attributes: true,
       childList: true,
-      characterData: false
+      characterData: true
     }
   }
 
@@ -87,20 +87,23 @@ class UIObserver {
     extLog('UIObserver: tabContainer removed')
   }
 
-  onTabCreated (tabElement) {
-    const getTabId = node => {
-      // eg. <div class="tab" id="tab-15">
-      const idParts = node.id.split('-')
-      return (idParts.length === 2) ? parseInt(idParts[1]) : null
-    }
+  onTabRemoved (tabElement) {
+    console.log('mutation tab removed', tabElement, this.getTabId(tabElement))
+  }
 
-    const id = getTabId(tabElement)
+  onTabCreated (tabElement) {
+    const id = this.getTabId(tabElement)
     if (id) {
-      console.log(this.tab.eventhandlers)
+      console.log('createdTab eventhandlers', this.tab)
       this.tab.eventHandlers.onCreated.forEach(eventHandler =>
         eventHandler(tabElement, id)
       )
     }
+  }
+
+  getTabId(node) {
+    const idParts = node.id.split('-')
+    return (idParts.length === 2) ? parseInt(idParts[1]) : null
   }
 
   // -------------------
@@ -117,8 +120,9 @@ class UIObserver {
       })
 
       mutation.removedNodes.forEach(node => {
-        isTabContainer(node)
-        this.onTabContainerRemoved(node)
+        if (isTabContainer(node)) {
+          this.onTabContainerRemoved(node)
+        }
       })
     })
   }
@@ -130,10 +134,16 @@ class UIObserver {
   findTabsFromMutations (mutations) {
     const findTabDiv = node => node.querySelector('.tab')
 
+    console.log('mutations for tab', mutations)
     mutations.forEach(mutation => {
       mutation.addedNodes.forEach(node => {
         const tabDiv = findTabDiv(node)
         tabDiv && this.onTabCreated(tabDiv)
+      })
+
+      mutation.removedNodes.forEach(node => {
+        const tabDiv = findTabDiv(node)
+        tabDiv && this.onTabRemoved(tabDiv)
       })
     })
   }
