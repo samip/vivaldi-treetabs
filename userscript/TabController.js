@@ -31,14 +31,16 @@ class TabController extends UIController {
     const classPrefix = 'treetabs-level-'
 
     element.parentElement.style[indentAttribute] = indentValue
-    element.parentElement.style['backgroundColor'] = '#' + colorScheme[indentLevel]
+    if (indentLevel > 0) {
+      element.parentElement.style['backgroundColor'] = '#' + colorScheme[indentLevel]
+    }
 
-    element.classList.each(klass => {
+    element.classList.forEach(klass => {
       if (klass.startsWith(classPrefix)) {
         element.classList.remove(klass)
       }
     })
-    element.classList.add(classPRefix + indentLevel)
+    element.classList.add(classPrefix + indentLevel)
 
     return this
   }
