@@ -10,7 +10,6 @@ class TabController extends UIController {
   // Tab UI methods
   // --------------
 
-
   indentTab (indentLevel) {
     const element = this.findElement()
     if (!element) {
@@ -21,9 +20,26 @@ class TabController extends UIController {
       extLog('INFO', 'indentTab attempt on element without parentElement on tab#' + this.tabId)
       return this
     }
+
+    const colorScheme = ["505050","58534F","61564F","69594E",
+      "725B4E","7A5E4D","83614D","8B644C","93674B","9C6A4B",
+      "A46C4A","AD6F4A","B57249"]
+
+
     const indentValue = this.indentationCSSValue(indentLevel)
     const indentAttribute = this.indentationOption('attribute')
+    const classPrefix = 'treetabs-level-'
+
     element.parentElement.style[indentAttribute] = indentValue
+    element.parentElement.style['backgroundColor'] = '#' + colorScheme[indentLevel]
+
+    element.classList.each(klass => {
+      if (klass.startsWith(classPrefix)) {
+        element.classList.remove(klass)
+      }
+    })
+    element.classList.add(classPRefix + indentLevel)
+
     return this
   }
 
