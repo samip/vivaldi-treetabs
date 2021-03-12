@@ -154,8 +154,11 @@ export default class Tab {
     // Tab strips are re-rendered sometimes on current Vivaldi snapshopt
     // and our buttons are lost in process.
     // Fix by rendering all close buttons for window each time
+
     const root = this.getWindow().root
-    root.applyDescendants((tab: any) => tab.renderCloseChildrenButton())
+    root.applyDescendants((tab: any) => tab.renderEverything())
+
+    this.renderCloseChildrenButton()
   }
 
   // Called on each tab after tab container reappear is redrawn.
@@ -166,7 +169,7 @@ export default class Tab {
 
   renderIndentation(): void {
     const depth = this.depth()
-    this.command('IndentTab', {indentLevel: depth})
+    this.command('IndentTab', { indentLevel: depth})
   }
 
   renderCloseChildrenButton(): void {
@@ -177,6 +180,8 @@ export default class Tab {
 
   hideCloseChildrenButton(): void {
     this.command('HideCloseChildrenButton')
+    const root = this.getWindow().root
+    root.applyDescendants((tab: any) => tab.renderEverything())
   }
 
 }

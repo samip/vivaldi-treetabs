@@ -15,6 +15,7 @@ class Messaging {
   }
 
   onDisconnected (port) {
+    uninitiliaze()
     console.log('Port disconnected', port)
   }
 
@@ -24,7 +25,7 @@ class Messaging {
       // @param tabId
       // @param indentLevel - how many steps tab needs to be indentedx
       case 'IndentTab':
-        UIController.tab(request.tabId).indentTab(request.indentLevel)
+        getTab(request.tabId).indentTab(request.indentLevel)
         break
 
       // Show or create 'Close child tabs' button in tab strip
@@ -33,19 +34,19 @@ class Messaging {
         // tmp fix to missing button problem 
 
         // treetabs.messaging.send({command: 'RenderAllTabs'})
-        UIController.tab(request.tabId).showCloseChildrenButton()
+        getTab(request.tabId).showCloseChildrenButton()
         break
 
       // Hide 'Close child tabs' button in tab strip
       // @param tabId
       case 'HideCloseChildrenButton':
-        UIController.tab(request.tabId).hideCloseChildrenButton()
+        getTab(request.tabId).hideCloseChildrenButton()
         break
 
       // Delete tab-specific data after tab has been closed
       // @param tabId
       case 'FlushData':
-        UIController.deleteTabReference(request.tabId)
+        // UIController.deleteTabReference(request.tabId)
         break
 
       default:
@@ -71,7 +72,8 @@ class Messaging {
   }
 
   log () {
-    console.log.apply(console, arguments)
+    // console.log.apply(console, arguments)
+    arguments[1] && console.log(arguments[0])
     this.send({log: arguments})
   }
 }

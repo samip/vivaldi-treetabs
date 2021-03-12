@@ -4,6 +4,7 @@ class TabController extends UIController {
     super()
     this.tabId = tabId
     this.hasChildren = false
+    this.reRenderObserver = null
   }
 
   // --------------
@@ -28,20 +29,15 @@ class TabController extends UIController {
 
     const indentValue = this.indentationCSSValue(indentLevel)
     const indentAttribute = this.indentationOption('attribute')
-    const classPrefix = 'treetabs-level-'
 
     element.parentElement.style[indentAttribute] = indentValue
     if (indentLevel > 0) {
-      element.parentElement.style['backgroundColor'] = '#' + colorScheme[indentLevel]
+      element.style.backgroundColor = '#' + colorScheme[indentLevel]
+    } else {
+      element.style.backgroundColor = null
     }
 
-    element.classList.forEach(klass => {
-      if (klass.startsWith(classPrefix)) {
-        element.classList.remove(klass)
-      }
-    })
-    element.classList.add(classPrefix + indentLevel)
-
+    this.setClass(element.parentElement, indentLevel)
     return this
   }
 
@@ -59,6 +55,17 @@ class TabController extends UIController {
       this.indentationOption('unit')
   }
 
+  setClass (element, indentLevel) {
+    const classPrefix = 'treetabs-level-'
+    const dataKey = 'treetabLevel'
+    element.classList.forEach(klass => {
+      if (klass.startsWith(classPrefix)) {
+        element.classList.remove(klass)
+      }
+    })
+    element.classList.add(classPrefix + indentLevel)
+    element.dataset[dataKey] = indentLevel
+  }
 
   showCloseChildrenButton () {
     this.hasChildren = true

@@ -8,10 +8,9 @@ class UIController {
     this.uid = Math.floor(Math.random() * 1000) + 1;
   }
 
-  static tab (tabId) {
+  tab (tabId) {
     if (!window.tabs[tabId]) {
       window.tabs[tabId] = new TabController(tabId)
-      window.tabs[tabId].setMessagingFunction(this.messagingFunction)
       extLog('INFO', `New tab item (first command for) tab${tabId}`)
     } else {
       // extLog('INFO', `Existing tab item ${tabId}`)
@@ -26,10 +25,6 @@ class UIController {
     if (tabId) {
       delete window.tabs[tabId]
     }
-  }
-
-  setMessagingFunction (fn) {
-    // tmp. disabled
   }
 
   commandIsQueued (command) {

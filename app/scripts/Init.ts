@@ -65,6 +65,7 @@ class ChromeCallbacks {
         })
       })
     }
+    tab.renderEverything()
   }
 
   static onTabRemoved(tabId:number) {

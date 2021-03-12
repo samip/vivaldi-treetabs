@@ -20,7 +20,8 @@ class UIObserver {
 
     this.tab = {
       eventHandlers: {
-        onCreated: [] // function(tabElement, tabId)
+        onCreated: [] // function(tabElement, tabId),
+
       },
       addCallback: addCallback
     }
@@ -59,11 +60,29 @@ class UIObserver {
     this.tabObserver.observe(tabStripElement, this.observerSettings())
   }
 
+  initRerenderObserver (target, callback) {
+    if (!target.parentElement) {
+      return
+    }
+    const observer = new MutationObserver(mutations => {
+      mutations.forEach(mutation => {
+        mutation.addedNodes.forEach(node => {
+          if (node.id === target.id) {
+            console.log('Rerender tab#'+node.id, node)
+            callback(node, node.id)
+          }
+        })
+      })
+    })
+    observer.observe(target.parentElement, this.observerSettings())
+    return observer
+  }
+
   observerSettings () {
     return {
-      attributes: true,
+      attributes: false,
       childList: true,
-      characterData: true
+      characterData: false
     }
   }
 
@@ -87,8 +106,11 @@ class UIObserver {
     extLog('UIObserver: tabContainer removed')
   }
 
+  onRerender (element, callback) {
+    return this.initRerenderObserver(element, callback)
+  }
+
   onTabRemoved (tabElement) {
-    console.log('mutation tab removed', tabElement, this.getTabId(tabElement))
   }
 
   onTabCreated (tabElement) {
