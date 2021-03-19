@@ -8,17 +8,18 @@ var tabCreated = (element, tabId) => {
 
   // Make sure button is shown after tab button is re-rendered
   if (tab.hasChildren) {
-    const cmdName = 'showCloseChildrenButton'
+    // const cmdName = 'showCloseChildrenButton'
     // tab.commandIsQueued(cmdName) || tab.queueCommand(cmdName)
-    showCloseChildrenButton()
+    // showCloseChildrenButton()
   }
   console.log('tab created tab#'+tabId, element, tab)
   // tab.setElement(element)
   // Commands were given to tab from extension before tab element
   // was rendered in UI, run them now.
   tab.runQueuedCommands(element)
-  tab.indentTab(1)
-  tab.reRenderObserver = window.treeTabs.uiObserver.onRerender(element, tabCreated)
+  messaging.send({command: 'RenderAllTabs'})
+  // tab.indentTab(1)
+  // tab.reRenderObserver = window.treeTabs.uiObserver.onRerender(element, tabCreated)
 }
 
 
@@ -46,7 +47,7 @@ function initTreeTabUserScript(messagingPort) {
     // Ask extension to re-render tab indentantions after
     // tab container is created
     messaging.send({command: 'RenderAllTabs'})
-    uiController.showRefreshViewButton()
+    // uiController.showRefreshViewButton()
   })
 
 
@@ -60,8 +61,15 @@ function initTreeTabUserScript(messagingPort) {
     tabFunction: tabCreated
   }
 
-  window.treeTabs.uiObserver.tab.addCallback('onCreated', tabCreated)
+  window.treeTabs.uiObserver.tab.addCallback('onCreated', (elemen, tabId) => {
 
+    messaging.send({command: 'RenderAllTabs'})
+  })
+
+  window.treeTabs.uiObserver.tab.addCallback('onRemoved', (elemen, tabId) => {
+
+    messaging.send({command: 'RenderAllTabs'})
+  })
   console.log('Treetabs userscript initialized')
 }
 

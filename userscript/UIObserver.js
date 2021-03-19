@@ -20,7 +20,8 @@ class UIObserver {
 
     this.tab = {
       eventHandlers: {
-        onCreated: [] // function(tabElement, tabId),
+        onCreated: [], // function(tabElement, tabId),
+        onRemoved: []
 
       },
       addCallback: addCallback
@@ -111,6 +112,13 @@ class UIObserver {
   }
 
   onTabRemoved (tabElement) {
+    const id = this.getTabId(tabElement)
+    if (id) {
+      console.log('createdTab eventhandlers', this.tab)
+      this.tab.eventHandlers.onRemoved.forEach(eventHandler =>
+        eventHandler(tabElement, id)
+      )
+    }
   }
 
   onTabCreated (tabElement) {
@@ -133,6 +141,7 @@ class UIObserver {
   // -------------------
 
   findTabContainerFromMutations (mutations) {
+    console.log('findTabContainerFromMutations', mutations)
     const isTabContainer = node => node.id === this.tabContainerElementId()
 
     mutations.forEach(mutation => {
@@ -156,16 +165,20 @@ class UIObserver {
   findTabsFromMutations (mutations) {
     const findTabDiv = node => node.querySelector('.tab')
 
-    console.log('mutations for tab', mutations)
+    console.log('mutations for findTabFromMutations', mutations)
     mutations.forEach(mutation => {
       mutation.addedNodes.forEach(node => {
         const tabDiv = findTabDiv(node)
-        tabDiv && this.onTabCreated(tabDiv)
+        if (tabDiv) {
+          this.onTabCreated(tabDiv)
+        }
       })
 
       mutation.removedNodes.forEach(node => {
         const tabDiv = findTabDiv(node)
-        tabDiv && this.onTabRemoved(tabDiv)
+        if (tabDiv) {
+          this.onTabRemoved(tabDiv)
+        }
       })
     })
   }
