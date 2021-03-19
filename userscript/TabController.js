@@ -82,13 +82,11 @@ class TabController extends UIController {
     if (existingButton) {
       existingButton.style.visibility = 'initial'
       extLog('DEBUG', `CloseChildrenButton set visible for tab#${this.logDisplay(this)}`)
-      console.log('closeButton updated', existingButton, element)
       // extLog('DEBUG', Showing close children button for tab#${this.logDisplay()}`)
     } else {
       const closeChildrenButton = this.createCloseChildrenButton()
       closeButton.parentNode.insertBefore(closeChildrenButton, closeButton)
       extLog('DEBUG', `CloseChildrenButton created for tab#${this.logDisplay(this)}`)
-      console.log('closeButton created', closeButton, element)
     }
 
     return this
