@@ -1,3 +1,9 @@
+This was an expirement to implement Firefox's Tree Style Tab, which provives hierarchical tabs view where tabs are shown below their opener tab. 
+
+The issue is that Chrome extension API does not allow modifying browser interface, hence the repo consists of Javascript user scripts that hook into browser.html and regular browser extension made with Typescript. Chrome's internal messaing API is used to communicate between the two parts.
+
+This extension worked for a brief moment in history with Vivaldi version released around 2020(?), before changes to Vivaldi's internal DOM broke it and I gave up.
+
 # Installing
 
 ## Extension
